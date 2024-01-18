@@ -2,7 +2,10 @@
   "profiles": {
     "ProfidLauncherUpdater": {
       "commandName": "Project",
-      "commandLineArgs": "run ATRIUMP"
+      "commandLineArgs": "run ATRIUMP",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
     }
   }
 }
