@@ -1,6 +1,6 @@
-﻿using Cake.Common.Tools.DotNet;
-using Cake.Common.Tools.DotNet.Publish;
+﻿using Cake.Common.Tools.GitVersion;
 using Cake.Frosting;
+using System;
 
 namespace Build.Tasks;
 
@@ -10,15 +10,26 @@ public sealed class PublishTask : FrostingTask<BuildContext>
 {
     public override void Run(BuildContext context)
     {
-        context
-            .DotNetPublish("../src/ProfidLauncherUpdater/ProfidLauncherUpdater.csproj", new DotNetPublishSettings
-            {
-                OutputDirectory = "../artifacts",
-                SelfContained = true,
-                PublishSingleFile = true,
-                Runtime = "win-x64",
-                PublishReadyToRun = true,
-            });
+        var v = context.GitVersion();
+
+        Console.WriteLine(v.SemVer);
+
+        //context
+        //    .DotNetPublish("../src/ProfidLauncherUpdater/ProfidLauncherUpdater.csproj", new DotNetPublishSettings
+        //    {
+        //        OutputDirectory = "../artifacts",
+        //        SelfContained = true,
+        //        PublishSingleFile = true,
+        //        Runtime = "win-x64",
+        //        PublishReadyToRun = true,
+        //        MSBuildSettings = new Cake.Common.Tools.DotNet.MSBuild.DotNetMSBuildSettings
+        //        {
+        //            Version = "1.0.1",
+        //            AssemblyVersion = "1.0.1",
+        //            FileVersion = "1.0.1",
+        //            InformationalVersion = "1.0.1",
+        //        }
+        //    });
 
     }
 }
