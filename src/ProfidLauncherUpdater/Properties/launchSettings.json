@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ProfidLauncherUpdater": {
+      "commandName": "Project",
+      "commandLineArgs": "run ATRIUMP"
+    }
+  }
+}
