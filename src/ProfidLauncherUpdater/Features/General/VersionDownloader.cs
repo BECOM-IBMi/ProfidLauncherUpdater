@@ -31,36 +31,36 @@ public class VersionDownloader
         }
     }
 
-    public async Task<Result<int>> DonwloadVersionFromServer(string version = "")
+    public async Task<Result<int>> DonwloadVersionFromServer(CancellationToken canellationToken, string version = "")
     {
         try
         {
             var vToDownlaod = version;
             if (string.IsNullOrEmpty(vToDownlaod))
             {
-                var res = await _remoteVersionService.GetCurrentVersionFromServer();
+                var res = await _remoteVersionService.GetCurrentVersionFromServer(canellationToken);
                 if (res.IsFailure) return res.Error;
 
                 vToDownlaod = res.Value;
             }
             _serverVersionFile = $"v{vToDownlaod}.zip";
 
-            var fileResult = await downloadFile();
+            var fileResult = await downloadFile(canellationToken);
             if (fileResult.IsFailure) return fileResult.Error;
 
-            var writeResult = await writeFile(fileResult.Value);
+            var writeResult = await writeFile(fileResult.Value, canellationToken);
             if (writeResult.IsFailure) return writeResult.Error;
 
-            var zipResult = await unzip();
+            var zipResult = await unzip(canellationToken);
             if (zipResult.IsFailure) return writeResult.Error;
 
-            var rmResult = await removeZipFile();
+            var rmResult = await removeZipFile(canellationToken);
             if (rmResult.IsFailure) return writeResult.Error;
 
-            var newInfo = await _localVersionService.WriteInfo(vToDownlaod);
+            var newInfo = await _localVersionService.WriteInfo(vToDownlaod, canellationToken);
             if (newInfo.IsFailure) return newInfo.Error;
 
-            var oldVersions = await _localVersionService.RemoveOldVersions();
+            var oldVersions = await _localVersionService.RemoveOldVersions(canellationToken);
             if (oldVersions.IsFailure) return oldVersions.Error;
 
             return 1;
@@ -71,11 +71,11 @@ public class VersionDownloader
         }
     }
 
-    private async Task<Result<Stream>> downloadFile()
+    private async Task<Result<Stream>> downloadFile(CancellationToken canellationToken)
     {
         try
         {
-            var stream = await _client.GetStreamAsync(_serverVersionFile);
+            var stream = await _client.GetStreamAsync(_serverVersionFile, canellationToken);
             if (stream is null)
             {
                 return new Error(nameof(downloadFile) + ".NotFound", "Current version package couldn't be found!");
@@ -89,7 +89,7 @@ public class VersionDownloader
         }
     }
 
-    private async Task<Result<bool>> writeFile(Stream fileStream)
+    private async Task<Result<bool>> writeFile(Stream fileStream, CancellationToken canellationToken)
     {
         try
         {
@@ -101,7 +101,7 @@ public class VersionDownloader
 
             _downloadedFilePath = Path.Combine(downloadFolder, _serverVersionFile);
             using FileStream outputFileStream = new(_downloadedFilePath, FileMode.CreateNew);
-            await fileStream.CopyToAsync(outputFileStream);
+            await fileStream.CopyToAsync(outputFileStream, canellationToken);
 
             return true;
         }
@@ -111,11 +111,11 @@ public class VersionDownloader
         }
     }
 
-    private async Task<Result<bool>> unzip()
+    private async Task<Result<bool>> unzip(CancellationToken canellationToken)
     {
         try
         {
-            await Task.Run(() => ZipFile.ExtractToDirectory(_downloadedFilePath, AppPath));
+            await Task.Run(() => ZipFile.ExtractToDirectory(_downloadedFilePath, AppPath), canellationToken);
 
             return true;
         }
@@ -125,11 +125,11 @@ public class VersionDownloader
         }
     }
 
-    private async Task<Result<bool>> removeZipFile()
+    private async Task<Result<bool>> removeZipFile(CancellationToken canellationToken)
     {
         try
         {
-            await Task.Run(() => File.Delete(_downloadedFilePath));
+            await Task.Run(() => File.Delete(_downloadedFilePath), canellationToken);
 
             return true;
         }

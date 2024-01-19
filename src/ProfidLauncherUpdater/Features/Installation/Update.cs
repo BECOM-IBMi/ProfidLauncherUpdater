@@ -21,21 +21,21 @@ public static class Update
             try
             {
                 //Read active local version
-                var lversion = await _localVersionService.GetLocalActiveVersion();
+                var lversion = await _localVersionService.GetLocalActiveVersion(cancellationToken);
                 if (lversion.IsFailure) return lversion.Error;
 
                 //Read latest from server
-                var vResult = await _remoteVersionService.GetCurrentVersionFromServer();
+                var vResult = await _remoteVersionService.GetCurrentVersionFromServer(cancellationToken);
                 if (vResult.IsFailure) return vResult.Error;
 
                 //Check current version
-                var lvResult = await _localVersionService.GetLocalVersions();
+                var lvResult = await _localVersionService.GetLocalVersions(cancellationToken);
                 if (lvResult.IsFailure) return lvResult.Error;
 
                 if (lvResult is null || lvResult.Value is null || !lvResult.Value.Any())
                 {
                     //firsttime -> download latest
-                    await _versionDownloader.DonwloadVersionFromServer();
+                    await _versionDownloader.DonwloadVersionFromServer(cancellationToken);
 
                     return (InstallationState.NEWINSTALLATION, "", vResult.Value);
                 }
@@ -46,7 +46,7 @@ public static class Update
                     if (lversion.Value == "")
                     {
                         //Aus irgendeinemgrund wurde keine version ins info file geschrieben
-                        var info = await _localVersionService.WriteInfo(cVersion);
+                        var info = await _localVersionService.WriteInfo(cVersion, cancellationToken);
                         if (info.IsFailure) return info.Error;
                     }
 
@@ -55,7 +55,7 @@ public static class Update
                 }
 
                 //if newer -> download latest
-                await _versionDownloader.DonwloadVersionFromServer();
+                await _versionDownloader.DonwloadVersionFromServer(cancellationToken);
 
                 return (InstallationState.UPDATED, lversion.Value, vResult.Value);
             }

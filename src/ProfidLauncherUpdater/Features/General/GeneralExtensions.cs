@@ -10,11 +10,12 @@ public static class GeneralExtensions
         services.AddHttpClient("repo", x =>
         {
             x.BaseAddress = new Uri(repbase);
+            x.Timeout = TimeSpan.FromSeconds(30);
         });
 
-        services.AddScoped<LocalVersionService>();
-        services.AddScoped<RemoteVersionService>();
-        services.AddScoped<VersionDownloader>();
+        services.AddSingleton<LocalVersionService>();
+        services.AddSingleton<RemoteVersionService>();
+        services.AddSingleton<VersionDownloader>();
 
         return services;
     }

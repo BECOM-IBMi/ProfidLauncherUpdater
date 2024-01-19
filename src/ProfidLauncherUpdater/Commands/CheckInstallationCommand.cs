@@ -26,7 +26,7 @@ public class CheckInstallationCommand(IMediator mediator) : AsyncCommand<CheckIn
         var msg = result.Value switch
         {
             InstallationState.NEWINSTALLATION => $"[yellow]This is a new installation[/]",
-            InstallationState.NEEDUPDATE => $"[orange]The current installation is not up to date[/]",
+            InstallationState.NEEDUPDATE => $"[darkorange]The current installation is not up to date[/]",
             InstallationState.UPTODATE => $"[lime]The installation is up to date[/]",
             _ => $"[purple]Unknown[/]"
         };

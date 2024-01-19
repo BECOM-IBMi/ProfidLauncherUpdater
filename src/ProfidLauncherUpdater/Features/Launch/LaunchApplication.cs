@@ -19,7 +19,7 @@ namespace ProfidLauncherUpdater.Features.Launch
             {
                 try
                 {
-                    var lvResult = await _localVersionService.GetLocalActiveVersion();
+                    var lvResult = await _localVersionService.GetLocalActiveVersion(cancellationToken);
                     if (lvResult.IsFailure) return lvResult.Error;
 
                     if (String.IsNullOrEmpty(lvResult.Value))

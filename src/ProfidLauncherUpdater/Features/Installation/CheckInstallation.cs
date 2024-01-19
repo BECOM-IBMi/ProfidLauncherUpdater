@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using ProfidLauncherUpdater.Features.General;
 using ProfidLauncherUpdater.Shared;
 
 namespace ProfidLauncherUpdater.Features.Installation;
@@ -7,19 +8,17 @@ public static class CheckInstallation
 {
     public record Command : IRequest<Result<InstallationState>>;
 
-    internal sealed class Handler(InstallationConfigurationModel configuration) : IRequestHandler<Command, Result<InstallationState>>
+    internal sealed class Handler(InstallationConfigurationModel configuration, LocalVersionService localVersionService, RemoteVersionService remoteVersionService) : IRequestHandler<Command, Result<InstallationState>>
     {
         private readonly InstallationConfigurationModel _configuration = configuration;
+        private readonly LocalVersionService _localVersionService = localVersionService;
+        private readonly RemoteVersionService _remoteVersionService = remoteVersionService;
 
         public async Task<Result<InstallationState>> Handle(Command request, CancellationToken cancellationToken)
         {
-            //Welche Ordner gibt es 
-            var foldersResult = InstallationHelper.GetFoldersInBaseDirectory(_configuration);
-            if (foldersResult.IsFailure) return foldersResult.Error;
-
-            //Uns intressieren nur die vx.y.z 
-            var fResult = InstallationHelper.GetLocalVersions(foldersResult.Value);
-            if (fResult.Value is null)
+            ////Uns intressieren nur die vx.y.z 
+            var fResult = await _localVersionService.GetLocalVersions(cancellationToken);
+            if (!fResult.Value.Any())
             {
                 //Erstinstallation
                 return InstallationState.NEWINSTALLATION;
@@ -27,11 +26,10 @@ public static class CheckInstallation
 
             //Versionsordner vorhanden, prüfen
             //Aktuelle Version holen
-            var vResult = await InstallationHelper.GetCurrentVersionFromServer($"{_configuration.Repository.BasePath}{_configuration.Repository.VersionFile}");
+            var vResult = await _remoteVersionService.GetCurrentVersionFromServer(cancellationToken);
             if (vResult.IsFailure) return vResult.Error;
 
-            var cVersion = "v" + vResult.Value;
-            if (fResult.Value.Any(x => x == cVersion))
+            if (!fResult.Value.Any(x => x == vResult.Value))
             {
                 //Aktueller Ordner nicht vorhanden
                 return InstallationState.NEEDUPDATE;

@@ -9,20 +9,20 @@ namespace ProfidLauncherUpdater.Features.General
         private readonly HttpClient _client = httpClientFactory.CreateClient("repo");
         private string? _currentVersion;
 
-        public async Task<Result<string>> GetCurrentVersionFromServer()
+        public async Task<Result<string>> GetCurrentVersionFromServer(CancellationToken cancellationToken)
         {
             try
             {
                 if (_currentVersion is null)
                 {
-                    var response = await _client.GetAsync(_config.Repository.VersionFile);
+                    var response = await _client.GetAsync(_config.Repository.VersionFile, cancellationToken);
                     if (!response.IsSuccessStatusCode)
                     {
                         return new Error(nameof(GetCurrentVersionFromServer) + ".StatusCode", "Couldn't load version from repository: " + response.StatusCode);
                     }
 
-                    var repoStream = await response.Content.ReadAsStreamAsync();
-                    var repo = await JsonSerializer.DeserializeAsync<RepositoryModel>(repoStream);
+                    var repoStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                    var repo = await JsonSerializer.DeserializeAsync<RepositoryModel>(repoStream, cancellationToken: cancellationToken);
 
                     if (repo is null)
                     {

@@ -23,7 +23,7 @@ public class LocalVersionService
         }
     }
 
-    public async Task<Result<InfoModel>> LoadInfo()
+    public async Task<Result<InfoModel>> LoadInfo(CancellationToken cancellationToken)
     {
         try
         {
@@ -38,7 +38,7 @@ public class LocalVersionService
                 }
 
                 using StreamReader reader = new(InfoFilePath);
-                var json = await reader.ReadToEndAsync();
+                var json = await reader.ReadToEndAsync(cancellationToken);
 
                 var info = JsonSerializer.Deserialize<InfoModel>(json) ?? throw new Exception("Couldn't load info json file");
                 _info = info;
@@ -52,11 +52,11 @@ public class LocalVersionService
         }
     }
 
-    public async Task<Result<bool>> WriteInfo(string newVersion)
+    public async Task<Result<bool>> WriteInfo(string newVersion, CancellationToken cancellationToken)
     {
         try
         {
-            var currentInfo = await LoadInfo();
+            var currentInfo = await LoadInfo(cancellationToken);
             if (currentInfo.IsFailure) return currentInfo.Error;
 
             if (File.Exists(InfoFilePath))
@@ -79,7 +79,7 @@ public class LocalVersionService
         }
     }
 
-    public async Task<Result<List<DirectoryInfo>>> GetFoldersInBaseDirectory()
+    public async Task<Result<List<DirectoryInfo>>> GetFoldersInBaseDirectory(CancellationToken cancellationToken)
     {
         try
         {
@@ -100,19 +100,19 @@ public class LocalVersionService
                 }
 
                 return _dirsInApp;
-            });
+            }, cancellationToken);
         }
         catch (Exception ex)
         {
-            return new Error(nameof(LocalVersionService) + "." + nameof(GetLocalVersions) + ".Error", "Error local versions: " + ex.Message);
+            return new Error(nameof(LocalVersionService) + "." + nameof(GetFoldersInBaseDirectory) + ".Error", "Error local versions: " + ex.Message);
         }
     }
 
-    public async Task<Result<string>> GetLocalActiveVersion()
+    public async Task<Result<string>> GetLocalActiveVersion(CancellationToken cancellationToken)
     {
         try
         {
-            var info = await LoadInfo();
+            var info = await LoadInfo(cancellationToken);
             if (info.IsFailure) return info.Error;
 
             return info.Value.Active;
@@ -123,11 +123,11 @@ public class LocalVersionService
         }
     }
 
-    public async Task<Result<List<string>>> GetLocalVersions()
+    public async Task<Result<List<string>>> GetLocalVersions(CancellationToken cancellationToken)
     {
         try
         {
-            var dirs = await GetFoldersInBaseDirectory();
+            var dirs = await GetFoldersInBaseDirectory(cancellationToken);
             if (dirs.IsFailure) return dirs.Error;
 
             var versions = dirs.Value.Where(x => x.Name.StartsWith('v')).Select(x => x.Name.Remove(0, 1)).ToList();
@@ -142,14 +142,14 @@ public class LocalVersionService
         }
     }
 
-    public async Task<Result<bool>> RemoveOldVersions()
+    public async Task<Result<bool>> RemoveOldVersions(CancellationToken cancellationToken)
     {
         try
         {
-            var dirs = await GetFoldersInBaseDirectory();
+            var dirs = await GetFoldersInBaseDirectory(cancellationToken);
             if (dirs.IsFailure) return dirs.Error;
 
-            var info = await LoadInfo();
+            var info = await LoadInfo(cancellationToken);
             if (info.IsFailure) return info.Error;
 
             foreach (var dir in dirs.Value)
