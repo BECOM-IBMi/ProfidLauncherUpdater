@@ -36,15 +36,12 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiDirsComponent">
     <ROW Directory="APPDIR" Directory_Parent="TARGETDIR" DefaultDir="APPDIR:." IsPseudoRoot="1"/>
-    <ROW Directory="DesktopFolder" Directory_Parent="TARGETDIR" DefaultDir="DESKTO~1|DesktopFolder" IsPseudoRoot="1"/>
-    <ROW Directory="SHORTCUTDIR" Directory_Parent="TARGETDIR" DefaultDir="SHORTC~1|SHORTCUTDIR" IsPseudoRoot="1"/>
     <ROW Directory="TARGETDIR" DefaultDir="SourceDir"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
     <ROW Component="APPDIR" ComponentId="{B0B60A6B-0A35-49E1-A390-D72DFA736E13}" Directory_="APPDIR" Attributes="0"/>
     <ROW Component="ProductInformation" ComponentId="{3E290937-D7B2-4105-A114-B4D5EAF9AA2C}" Directory_="APPDIR" Attributes="260" KeyPath="Version"/>
     <ROW Component="ProfidLauncherUpdater.exe" ComponentId="{C904652F-F21F-419A-88E0-604AA9D16DDA}" Directory_="APPDIR" Attributes="256" KeyPath="ProfidLauncherUpdater.exe"/>
-    <ROW Component="SHORTCUTDIR" ComponentId="{3E89A556-CA9C-4D33-81C1-20EC77ABAF6D}" Directory_="SHORTCUTDIR" Attributes="0"/>
     <ROW Component="appsettings.json" ComponentId="{D5CCEF45-6F43-407C-AF5B-99CF81D1F4BC}" Directory_="APPDIR" Attributes="0" KeyPath="appsettings.json" Type="0"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatsComponent">
@@ -109,7 +106,6 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCreateFolderComponent">
     <ROW Directory_="APPDIR" Component_="APPDIR" ManualDelete="true"/>
-    <ROW Directory_="SHORTCUTDIR" Component_="SHORTCUTDIR" ManualDelete="false"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCustActComponent">
     <ROW Action="AI_DOWNGRADE" Type="19" Target="4010"/>
@@ -131,7 +127,6 @@
     <ROW Feature_="MainFeature" Component_="ProductInformation"/>
     <ROW Feature_="MainFeature" Component_="ProfidLauncherUpdater.exe"/>
     <ROW Feature_="MainFeature" Component_="appsettings.json"/>
-    <ROW Feature_="MainFeature" Component_="SHORTCUTDIR"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
     <ROW Name="favicon.exe" SourcePath="favicon.ico" Index="0"/>
@@ -166,10 +161,6 @@
     <ROW Registry="ProductName" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="\"/>
     <ROW Registry="Software" Root="-1" Key="Software" Name="\"/>
     <ROW Registry="Version" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="Version" Value="[ProductVersion]" Component_="ProductInformation"/>
-  </COMPONENT>
-  <COMPONENT cid="caphyon.advinst.msicomp.MsiShortsComponent">
-    <ROW Shortcut="ProfidLauncherUpdater" Directory_="DesktopFolder" Name="PROFID~1|ProfidLauncherUpdater" Component_="ProfidLauncherUpdater.exe" Target="[#ProfidLauncherUpdater.exe]" Hotkey="0" Icon_="favicon.exe" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
-    <ROW Shortcut="ProfidLauncherUpdater_1" Directory_="SHORTCUTDIR" Name="PROFID~1|ProfidLauncherUpdater" Component_="ProfidLauncherUpdater.exe" Target="[#ProfidLauncherUpdater.exe]" Hotkey="0" Icon_="favicon.exe" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiThemeComponent">
     <ATTRIBUTE name="UsedTheme" value="classic"/>
