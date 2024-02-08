@@ -29,13 +29,14 @@ namespace ProfidLauncherUpdater.Features.Launch
                     }
 
                     var path = $"v{lvResult.Value}";
-                    path = Path.Combine(_config.PathToApp, path, _config.AppToLaunch);
+                    var appBasePath = Path.Combine(_config.PathToApp, path);
+                    path = Path.Combine(appBasePath, _config.AppToLaunch);
 
                     //App starten
                     ProcessStartInfo startInfo = new ProcessStartInfo();
                     startInfo.CreateNoWindow = false;
                     startInfo.UseShellExecute = false;
-                    startInfo.WorkingDirectory = _config.PathToApp;
+                    startInfo.WorkingDirectory = appBasePath;
                     startInfo.FileName = path;
                     startInfo.Arguments = $"-m {request.mode}";
                     Process.Start(startInfo);

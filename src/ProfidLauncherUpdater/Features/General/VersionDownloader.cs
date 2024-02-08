@@ -57,7 +57,7 @@ public class VersionDownloader
             var writeResult = await writeFile(fileResult.Value, canellationToken);
             if (writeResult.IsFailure) return writeResult.Error;
 
-            var zipResult = await unzip(canellationToken);
+            var zipResult = await unzip(vToDownlaod, canellationToken);
             if (zipResult.IsFailure) return writeResult.Error;
 
             var rmResult = await removeZipFile(canellationToken);
@@ -122,12 +122,14 @@ public class VersionDownloader
         }
     }
 
-    private async Task<Result<bool>> unzip(CancellationToken canellationToken)
+    private async Task<Result<bool>> unzip(string version, CancellationToken canellationToken)
     {
         try
         {
-            _logger.LogInformation("Unzipping file...");
-            await Task.Run(() => ZipFile.ExtractToDirectory(_downloadedFilePath, AppPath), canellationToken);
+            var target = Path.Combine(AppPath, $"v{version}");
+            _logger.LogInformation($"Unzipping file into folder {target}...");
+
+            await Task.Run(() => ZipFile.ExtractToDirectory(_downloadedFilePath, target), canellationToken);
 
             return true;
         }
