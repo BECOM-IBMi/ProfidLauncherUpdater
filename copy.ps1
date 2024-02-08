@@ -4,6 +4,6 @@ Param(
     [String] $target
 )
 
-$package = (get-location).path + "\package"
+$package = (get-location).path + "\installer"
 
 cp $package\* $target
