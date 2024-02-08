@@ -25,11 +25,13 @@ $project.ProductDetails.SetIcon($icon)
 $pl = $project.FilesComponent.FindFileByPath("APPDIR\ProfidLauncherUpdater.exe")
 
 $sc = $project.ShortcutsComponent.CreateFileShortcut($project.PredefinedFolders.Desktop, $pl)
+$sc.Name = "Profid Launcher"
 $sc.Icon($icon)
 $sc.Arguments = "run ATRIUMP"
 
 $sc = $project.ShortcutsComponent.CreateFileShortcut($project.PredefinedFolders.ShortcutFolder, $pl)
 $sc.Icon($icon)
+$sc.Name = "Profid Launcher"
 $sc.Arguments = "run ATRIUMP"
 
 $project.BuildComponent.Builds[0].OutputFolder = $package
