@@ -1,13 +1,15 @@
-﻿using ProfidLauncherUpdater.Shared;
+﻿using Microsoft.Extensions.Logging;
+using ProfidLauncherUpdater.Shared;
 using System.Text.Json;
 
 namespace ProfidLauncherUpdater.Features.General
 {
-    public class RemoteVersionService(InstallationConfigurationModel config, IHttpClientFactory httpClientFactory)
+    public class RemoteVersionService(InstallationConfigurationModel config, IHttpClientFactory httpClientFactory, ILogger<RemoteVersionService> logger)
     {
         private readonly InstallationConfigurationModel _config = config;
         private readonly HttpClient _client = httpClientFactory.CreateClient("repo");
         private string? _currentVersion;
+        private readonly ILogger<RemoteVersionService> _logger = logger;
 
         public async Task<Result<string>> GetCurrentVersionFromServer(CancellationToken cancellationToken)
         {
@@ -15,6 +17,7 @@ namespace ProfidLauncherUpdater.Features.General
             {
                 if (_currentVersion is null)
                 {
+                    _logger.LogInformation("Loading version from server...");
                     var response = await _client.GetAsync(_config.Repository.VersionFile, cancellationToken);
                     if (!response.IsSuccessStatusCode)
                     {
@@ -30,6 +33,7 @@ namespace ProfidLauncherUpdater.Features.General
                     }
 
                     _currentVersion = repo.Current;
+                    _logger.LogInformation($"Found version {_currentVersion} on the server!");
                 }
 
                 return _currentVersion;

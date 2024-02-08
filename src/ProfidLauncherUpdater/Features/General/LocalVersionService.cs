@@ -1,4 +1,5 @@
-﻿using ProfidLauncherUpdater.Shared;
+﻿using Microsoft.Extensions.Logging;
+using ProfidLauncherUpdater.Shared;
 using System.Text.Json;
 
 namespace ProfidLauncherUpdater.Features.General;
@@ -6,20 +7,25 @@ namespace ProfidLauncherUpdater.Features.General;
 public class LocalVersionService
 {
     private readonly InstallationConfigurationModel _config;
+    private readonly ILogger<LocalVersionService> _logger;
     private InfoModel? _info;
     private List<DirectoryInfo>? _dirsInApp;
 
     public string AppPath { get; set; }
-    public string InfoFilePath => Path.Combine(_config.PathToApp, _config.InfoFileName);
+    public string InfoFilePath { get; set; }
 
-    public LocalVersionService(InstallationConfigurationModel config)
+    public LocalVersionService(InstallationConfigurationModel config, ILogger<LocalVersionService> logger)
     {
         _config = config;
+        _logger = logger;
 
         AppPath = config.PathToApp;
+        InfoFilePath = Path.Combine(_config.PathToApp, _config.InfoFileName);
+
         if (string.IsNullOrEmpty(config.PathToApp))
         {
             AppPath = Directory.GetCurrentDirectory();
+            InfoFilePath = Path.Combine(AppPath, _config.InfoFileName);
         }
     }
 
@@ -27,11 +33,13 @@ public class LocalVersionService
     {
         try
         {
+            _logger.LogInformation($"Checking local info file ({InfoFilePath})...");
             if (_info is null)
             {
                 //Json File laden, wenn es dieses gibt
                 if (!File.Exists(InfoFilePath))
                 {
+                    _logger.LogInformation("No local info file!");
                     //Ist eine Neu-Installation
                     _info = new InfoModel();
                     return _info;
@@ -56,6 +64,8 @@ public class LocalVersionService
     {
         try
         {
+            _logger.LogInformation("Updating info file...");
+
             var currentInfo = await LoadInfo(cancellationToken);
             if (currentInfo.IsFailure) return currentInfo.Error;
 
@@ -70,6 +80,7 @@ public class LocalVersionService
             var json = JsonSerializer.Serialize(_info);
 
             await File.WriteAllTextAsync(InfoFilePath, json);
+            _logger.LogInformation($"Info file written ({_info.Active})");
 
             return true;
         }

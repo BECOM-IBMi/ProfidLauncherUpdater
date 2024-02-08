@@ -1,4 +1,5 @@
-﻿using ProfidLauncherUpdater.Shared;
+﻿using Microsoft.Extensions.Logging;
+using ProfidLauncherUpdater.Shared;
 using System.IO.Compression;
 
 namespace ProfidLauncherUpdater.Features.General;
@@ -9,6 +10,7 @@ public class VersionDownloader
     private readonly HttpClient _client;
     private readonly RemoteVersionService _remoteVersionService;
     private readonly LocalVersionService _localVersionService;
+    private readonly ILogger<VersionDownloader> _logger;
     private string _serverVersionFile = "";
     private string _downloadedFilePath = "";
 
@@ -17,12 +19,14 @@ public class VersionDownloader
     public VersionDownloader(InstallationConfigurationModel config,
         IHttpClientFactory httpClientFactory,
         RemoteVersionService remoteVersionService,
-        LocalVersionService localVersionService)
+        LocalVersionService localVersionService,
+        ILogger<VersionDownloader> logger)
     {
         _config = config;
         _client = httpClientFactory.CreateClient("repo");
         _remoteVersionService = remoteVersionService;
         _localVersionService = localVersionService;
+        _logger = logger;
 
         AppPath = config.PathToApp;
         if (string.IsNullOrEmpty(config.PathToApp))
@@ -35,6 +39,8 @@ public class VersionDownloader
     {
         try
         {
+            _logger.LogInformation($"Downloading version {version} from server...");
+
             var vToDownlaod = version;
             if (string.IsNullOrEmpty(vToDownlaod))
             {
@@ -63,6 +69,7 @@ public class VersionDownloader
             var oldVersions = await _localVersionService.RemoveOldVersions(canellationToken);
             if (oldVersions.IsFailure) return oldVersions.Error;
 
+            _logger.LogInformation("File downloaded!");
             return 1;
         }
         catch (Exception ex)
@@ -94,12 +101,16 @@ public class VersionDownloader
         try
         {
             var downloadFolder = Path.Combine(AppPath, "tmp");
+            _logger.LogInformation($"Writing downloaded file info folder {downloadFile}...");
+
             if (!Directory.Exists(downloadFolder))
             {
+                _logger.LogInformation($"Folder doesn't exist, need to create it...");
                 Directory.CreateDirectory(downloadFolder);
             }
 
             _downloadedFilePath = Path.Combine(downloadFolder, _serverVersionFile);
+            _logger.LogInformation($"Writing downloaded file into file {_downloadedFilePath}...");
             using FileStream outputFileStream = new(_downloadedFilePath, FileMode.CreateNew);
             await fileStream.CopyToAsync(outputFileStream, canellationToken);
 
@@ -115,6 +126,7 @@ public class VersionDownloader
     {
         try
         {
+            _logger.LogInformation("Unzipping file...");
             await Task.Run(() => ZipFile.ExtractToDirectory(_downloadedFilePath, AppPath), canellationToken);
 
             return true;
@@ -129,6 +141,7 @@ public class VersionDownloader
     {
         try
         {
+            _logger.LogInformation("Deleting zip file...");
             await Task.Run(() => File.Delete(_downloadedFilePath), canellationToken);
 
             return true;
