@@ -24,18 +24,20 @@ public class LaunchCommand : AsyncCommand<LaunchCommand.Settings>
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
+        AnsiConsole.MarkupLine($"Launching ProfidLauncher in {settings.Mode} mode...");
         var result = await _mediator.Send(new LaunchApplication.Command(settings.Mode));
         if (result.IsFailure)
         {
-            AnsiConsole.Markup($"[red]{result.Error.Description}[/]");
+            AnsiConsole.MarkupLine($"[red]{result.Error.Description}[/]");
             return -1;
         }
 
         //Nun auf updates prüfen
+        AnsiConsole.MarkupLine($"Checking for updates...");
         var uResult = await _mediator.Send(new Update.Command());
         if (uResult.IsFailure)
         {
-            AnsiConsole.Markup($"[red]{uResult.Error.Description}[/]");
+            AnsiConsole.MarkupLine($"[red]{uResult.Error.Description}[/]");
             return -1;
         }
 
@@ -46,7 +48,7 @@ public class LaunchCommand : AsyncCommand<LaunchCommand.Settings>
             result = await _mediator.Send(new LaunchApplication.Command(settings.Mode));
             if (result.IsFailure)
             {
-                AnsiConsole.Markup($"[red]{result.Error.Description}[/]");
+                AnsiConsole.MarkupLine($"[red]{result.Error.Description}[/]");
                 return -1;
             }
         }

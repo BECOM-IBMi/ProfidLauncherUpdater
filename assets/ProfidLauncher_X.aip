@@ -45,7 +45,7 @@
     <ROW Component="APPDIR" ComponentId="{B0B60A6B-0A35-49E1-A390-D72DFA736E13}" Directory_="APPDIR" Attributes="0"/>
     <ROW Component="ProductInformation" ComponentId="{3E290937-D7B2-4105-A114-B4D5EAF9AA2C}" Directory_="APPDIR" Attributes="260" KeyPath="Version"/>
     <ROW Component="ProfidLauncherUpdater.exe" ComponentId="{C904652F-F21F-419A-88E0-604AA9D16DDA}" Directory_="APPDIR" Attributes="256" KeyPath="ProfidLauncherUpdater.exe"/>
-    <ROW Component="SHORTCUTDIR" ComponentId="{1799F8B7-B945-4C73-B774-98F3E9982474}" Directory_="SHORTCUTDIR" Attributes="0"/>
+    <ROW Component="SHORTCUTDIR" ComponentId="{BECD10D1-4ED8-4D0C-B4F9-A291D735EA1E}" Directory_="SHORTCUTDIR" Attributes="0"/>
     <ROW Component="appsettings.json" ComponentId="{D5CCEF45-6F43-407C-AF5B-99CF81D1F4BC}" Directory_="APPDIR" Attributes="0" KeyPath="appsettings.json" Type="0"/>
     <ROW Component="favicon.ico" ComponentId="{2A327526-6F9F-4ECD-961E-D5863EAF82F4}" Directory_="Assets_Dir" Attributes="0" KeyPath="favicon.ico" Type="0"/>
   </COMPONENT>
@@ -179,6 +179,8 @@
   <COMPONENT cid="caphyon.advinst.msicomp.MsiShortsComponent">
     <ROW Shortcut="ProfidLauncherUpdater" Directory_="DesktopFolder" Name="PROFID~2|Profid Launcher" Component_="ProfidLauncherUpdater.exe" Target="[#ProfidLauncherUpdater.exe]" Arguments="run ATRIUMP" Hotkey="0" Icon_="favicon.exe" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
     <ROW Shortcut="ProfidLauncherUpdater_1" Directory_="SHORTCUTDIR" Name="PROFID~2|Profid Launcher" Component_="ProfidLauncherUpdater.exe" Target="[#ProfidLauncherUpdater.exe]" Arguments="run ATRIUMP" Hotkey="0" Icon_="favicon.exe" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
+    <ROW Shortcut="ProfidLauncherUpdater_2" Directory_="DesktopFolder" Name="PROFID~1|ProfidLauncherUpdater" Component_="ProfidLauncherUpdater.exe" Target="[#ProfidLauncherUpdater.exe]" Arguments="run ATRIUMP" Hotkey="0" Icon_="favicon.exe" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
+    <ROW Shortcut="ProfidLauncherUpdater_3" Directory_="SHORTCUTDIR" Name="PROFID~1|ProfidLauncherUpdater" Component_="ProfidLauncherUpdater.exe" Target="[#ProfidLauncherUpdater.exe]" Arguments="run ATRIUMP" Hotkey="0" Icon_="favicon.exe" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiThemeComponent">
     <ATTRIBUTE name="UsedTheme" value="classic"/>

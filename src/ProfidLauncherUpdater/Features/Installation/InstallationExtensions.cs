@@ -9,6 +9,7 @@ namespace ProfidLauncherUpdater.Features.Installation
         {
             var installationConfig = new InstallationConfigurationModel();
             configuration.GetSection("installation").Bind(installationConfig);
+
             services.AddSingleton(installationConfig);
 
             return services;

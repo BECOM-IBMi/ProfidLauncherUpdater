@@ -10,6 +10,7 @@ using Spectre.Console;
 var host = Host.CreateApplicationBuilder();
 
 host.Services.AddFeatures(host.Configuration);
+host.Services.AddScoped<IAnsiConsoleService, AnsiConsoleService>();
 
 var app = new CommandApp(new TypeRegistrar(host));
 
