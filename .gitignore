@@ -368,3 +368,7 @@ artifacts/
 *-cache/
 
 installer/
+
+assets/ProfidLauncher.aip
+ProfidLauncher.aip
+assets/ProfidLauncher.back*.aip

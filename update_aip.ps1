@@ -2,8 +2,11 @@ $assets = (get-location).path + "\assets"
 $outpf = (get-location).path + "\artifacts"
 $package = (get-location).path + "\installer"
 
+$aipBase = $assets + "\ProfidLauncherBase.aip"
 $aip = $assets + "\ProfidLauncher.aip"
 $icon = $assets + "\favicon.ico"
+
+cp $aipBase $aip
 
 $advinst = New-Object -ComObject AdvancedInstaller
 
@@ -19,7 +22,10 @@ if($ENV:BUILD_NUMBER) {
     $tag = $tag + "99"
 }
 
-$project.ProductDetails.Version = $tag
+$ver = dotnet-gitversion /output json /showvariable SemVer
+echo $ver
+
+$project.ProductDetails.Version = $ver
 $project.ProductDetails.SetIcon($icon)
 
 $pl = $project.FilesComponent.FindFileByPath("APPDIR\ProfidLauncherUpdater.exe")
@@ -39,3 +45,5 @@ $project.BuildComponent.Builds[0].OutputFolder = $package
 $project.SaveAs($aip)
 
 $project.Build()
+
+git restore assets/ProfidLauncher.aip
