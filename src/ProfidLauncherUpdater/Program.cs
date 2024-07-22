@@ -6,7 +6,6 @@ using Microsoft.Extensions.Hosting;
 using ProfidLauncherUpdater.Commands;
 using ProfidLauncherUpdater.Features;
 using Spectre.Console;
-using System.Reflection;
 
 var host = Host.CreateApplicationBuilder();
 
@@ -35,25 +34,7 @@ app.Configure(c =>
 AnsiConsole.Write(new FigletText("ProfidLauncher Updater").Centered().Color(Color.Blue));
 //}
 
-var version = "1.0.0+LOCALBUILD";
-var appAssembly = typeof(Program).Assembly;
-if (appAssembly != null)
-{
-    var attrs = appAssembly.GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute));
-    if (attrs != null)
-    {
-        var infoVerAttr = (AssemblyInformationalVersionAttribute)attrs;
-        if (infoVerAttr != null && infoVerAttr.InformationalVersion.Length > 6)
-        {
-            version = infoVerAttr.InformationalVersion;
-        }
-    }
-}
-
-if (version.Contains('+'))
-{
-    version = version[..version.IndexOf('+')];
-}
+var version = Tools.GetCurrentVersion();
 
 AnsiConsole.WriteLine();
 AnsiConsole.WriteLine($"Version: {version}");

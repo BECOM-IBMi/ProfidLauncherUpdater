@@ -1,9 +1,9 @@
 $ver = dotnet-gitversion /output json /showvariable SemVer
 
 #Version anlegen
-$json = '{"softwareId":"d37682b0-ac74-49f2-a209-587fc79ed7ee","version":"' + $ver + '"}'
+$json = '{"softwareId":"f6cf4f14-4c16-4413-9cc9-dc012f46b7ba","version":"' + $ver + '"}'
 
-$resp = curl --header "Content-Type: application/json" --request POST --data $json http://srepo.becom.at/api/software/version
+$resp = curl --header "Content-Type: application/json" --request POST --data $json https://localhost:7112/api/software/version
 echo $resp
 $json = ConvertFrom-Json $resp
 
@@ -12,7 +12,7 @@ if ($LASTEXITCODE -ne 0)
 	exit $LASTEXITCODE
 }
 
-$url = 'http://srepo.becom.at/api/software/version/upload/' + $json.id
+$url = 'https://localhost:7112/api/software/version/upload/' + $json.id
 
 #Zip file
 
