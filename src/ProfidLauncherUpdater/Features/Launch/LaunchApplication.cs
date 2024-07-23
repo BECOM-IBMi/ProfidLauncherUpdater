@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using FlintSoft.Result;
+using MediatR;
 using ProfidLauncherUpdater.Features.General;
 using ProfidLauncherUpdater.Shared;
 using System.Diagnostics;
@@ -20,7 +21,7 @@ namespace ProfidLauncherUpdater.Features.Launch
                 try
                 {
                     var lvResult = await _localVersionService.GetLocalActiveVersion(cancellationToken);
-                    if (lvResult.IsFailure) return lvResult.Error;
+                    if (lvResult.IsFailure) return lvResult.Error!.ToError();
 
                     if (String.IsNullOrEmpty(lvResult.Value))
                     {

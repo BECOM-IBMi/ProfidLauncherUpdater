@@ -28,7 +28,7 @@ public class LaunchCommand : AsyncCommand<LaunchCommand.Settings>
         var result = await _mediator.Send(new LaunchApplication.Command(settings.Mode));
         if (result.IsFailure)
         {
-            AnsiConsole.MarkupLine($"[red]{result.Error.Description}[/]");
+            AnsiConsole.MarkupLine($"[red]{result.Error!.Description}[/]");
             return -1;
         }
 
@@ -37,7 +37,7 @@ public class LaunchCommand : AsyncCommand<LaunchCommand.Settings>
         var uResult = await _mediator.Send(new Update.Command());
         if (uResult.IsFailure)
         {
-            AnsiConsole.MarkupLine($"[red]{uResult.Error.Description}[/]");
+            AnsiConsole.MarkupLine($"[red]{uResult.Error!.Description}[/]");
             return -1;
         }
 
@@ -48,7 +48,7 @@ public class LaunchCommand : AsyncCommand<LaunchCommand.Settings>
             result = await _mediator.Send(new LaunchApplication.Command(settings.Mode));
             if (result.IsFailure)
             {
-                AnsiConsole.MarkupLine($"[red]{result.Error.Description}[/]");
+                AnsiConsole.MarkupLine($"[red]{result.Error!.Description}[/]");
                 return -1;
             }
         }

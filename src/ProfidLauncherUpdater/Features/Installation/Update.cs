@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using FlintSoft.Result;
+using MediatR;
 using ProfidLauncherUpdater.Features.General;
 using ProfidLauncherUpdater.Shared;
 
@@ -22,32 +23,32 @@ public static class Update
             {
                 //Read active local version
                 var lversion = await _localVersionService.GetLocalActiveVersion(cancellationToken);
-                if (lversion.IsFailure) return lversion.Error;
+                if (lversion.IsFailure) return lversion.Error!.ToError();
 
                 //Read latest from server
                 var vResult = await _remoteVersionService.GetCurrentVersionFromServer(cancellationToken);
-                if (vResult.IsFailure) return vResult.Error;
+                if (vResult.IsFailure) return vResult.Error!.ToError();
 
                 //Check current version
                 var lvResult = await _localVersionService.GetLocalVersions(cancellationToken);
-                if (lvResult.IsFailure) return lvResult.Error;
+                if (lvResult.IsFailure) return lvResult.Error!.ToError();
 
                 if (lvResult is null || lvResult.Value is null || !lvResult.Value.Any())
                 {
                     //firsttime -> download latest
                     await _versionDownloader.DonwloadVersionFromServer(cancellationToken);
 
-                    return (InstallationState.NEWINSTALLATION, "", vResult.Value);
+                    return (InstallationState.NEWINSTALLATION, "", vResult.Value!);
                 }
 
-                var cVersion = vResult.Value;
+                var cVersion = vResult.Value!;
                 if (lvResult.Value.Any(x => x == cVersion))
                 {
                     if (lversion.Value == "")
                     {
                         //Aus irgendeinemgrund wurde keine version ins info file geschrieben
                         var info = await _localVersionService.WriteInfo(cVersion, cancellationToken);
-                        if (info.IsFailure) return info.Error;
+                        if (info.IsFailure) return info.Error!.ToError();
                     }
 
                     //same -> do nothing
@@ -57,7 +58,7 @@ public static class Update
                 //if newer -> download latest
                 await _versionDownloader.DonwloadVersionFromServer(cancellationToken);
 
-                return (InstallationState.UPDATED, lversion.Value, vResult.Value);
+                return (InstallationState.UPDATED, lversion.Value!, vResult.Value!);
             }
             catch (Exception ex)
             {

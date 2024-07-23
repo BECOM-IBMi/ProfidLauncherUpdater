@@ -1,4 +1,7 @@
-﻿using System.Reflection;
+﻿using FlintSoft.Result;
+using ProfidLauncherUpdater.Features.General;
+using System.IO.Compression;
+using System.Reflection;
 
 namespace ProfidLauncherUpdater.Infrastructure;
 
@@ -28,11 +31,17 @@ public class Tools
         return version;
     }
 
-    public static void CheckForUpdate()
+    public static async Task<Result<bool>> Unzipper(string zippedFile, string target, CancellationToken canellationToken = default)
     {
-        var webClient = new HttpClient
+        try
         {
-            BaseAddress =
-        };
+            await Task.Run(() => ZipFile.ExtractToDirectory(zippedFile, target), canellationToken);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            return new Error(nameof(VersionDownloader) + "." + nameof(Unzipper) + ".Error", "Error unzipping version file: " + ex.Message);
+        }
     }
 }

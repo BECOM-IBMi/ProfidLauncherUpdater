@@ -19,7 +19,7 @@ public class UpdateCommand(IMediator mediator) : AsyncCommand<UpdateCommand.Sett
         var result = await _mediator.Send(new Update.Command());
         if (result.IsFailure)
         {
-            AnsiConsole.Markup($"[red]{result.Error.Description}[/]");
+            AnsiConsole.Markup($"[red]{result.Error!.Description}[/]");
             return 0;
         }
 

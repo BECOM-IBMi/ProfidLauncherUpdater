@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using FlintSoft.Result;
+using Microsoft.Extensions.Logging;
 using ProfidLauncherUpdater.Shared;
 using System.Text.Json;
 
@@ -67,7 +68,7 @@ public class LocalVersionService
             _logger.LogInformation("Updating info file...");
 
             var currentInfo = await LoadInfo(cancellationToken);
-            if (currentInfo.IsFailure) return currentInfo.Error;
+            if (currentInfo.IsFailure) return new Error(currentInfo.Error!.Code, currentInfo.Error.Description);
 
             if (File.Exists(InfoFilePath))
             {
@@ -124,9 +125,9 @@ public class LocalVersionService
         try
         {
             var info = await LoadInfo(cancellationToken);
-            if (info.IsFailure) return info.Error;
+            if (info.IsFailure) return new Error(info.Error!.Code, info.Error.Description);
 
-            return info.Value.Active;
+            return info.Value!.Active;
         }
         catch (Exception ex)
         {
@@ -139,9 +140,9 @@ public class LocalVersionService
         try
         {
             var dirs = await GetFoldersInBaseDirectory(cancellationToken);
-            if (dirs.IsFailure) return dirs.Error;
+            if (dirs.IsFailure) return dirs.Error!.ToError();
 
-            var versions = dirs.Value.Where(x => x.Name.StartsWith('v')).Select(x => x.Name.Remove(0, 1)).ToList();
+            var versions = dirs.Value!.Where(x => x.Name.StartsWith('v')).Select(x => x.Name.Remove(0, 1)).ToList();
             if (versions is null) return new Error(nameof(LocalVersionService) + "." + nameof(GetLocalVersions) + ".READ_VERSIONS", "Couldn't read versions from the local folders");
 
             return versions;
@@ -158,15 +159,15 @@ public class LocalVersionService
         try
         {
             var dirs = await GetFoldersInBaseDirectory(cancellationToken);
-            if (dirs.IsFailure) return dirs.Error;
+            if (dirs.IsFailure) return new Error(dirs.Error!.Code, dirs.Error.Description);
 
             var info = await LoadInfo(cancellationToken);
-            if (info.IsFailure) return info.Error;
+            if (info.IsFailure) return new Error(dirs.Error!.Code, dirs.Error.Description);
 
-            foreach (var dir in dirs.Value)
+            foreach (var dir in dirs.Value!)
             {
                 //Prüfen ob es e nicht die aktuelle oder die vorherige Version ist
-                if (dir.Name == $"v{info.Value.Active}" || dir.Name == $"v{info.Value.Previous}")
+                if (dir.Name == $"v{info.Value!.Active}" || dir.Name == $"v{info.Value.Previous}")
                 {
                     continue;
                 }

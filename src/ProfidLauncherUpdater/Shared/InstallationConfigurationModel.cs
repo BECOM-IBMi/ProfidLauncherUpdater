@@ -22,6 +22,17 @@ public class RepositoryConfigurationModel
     [JsonPropertyName("basePath")]
     public string BasePath { get; set; } = "";
 
-    [JsonPropertyName("versionFile")]
+    [JsonPropertyName("versionPath")]
+    public string VersionPath { get; set; } = "";
+
+    [JsonPropertyName("downloadPath")]
+    public string DownloadPath { get; set; } = "";
+
+    [JsonPropertyName("softwareId")]
+    public string SoftwareId { get; set; } = "";
+
+    [JsonPropertyName("localDirectory")]
+    public string LocalDirectory { get; set; } = "";
+
     public string VersionFile { get; set; } = "";
 }

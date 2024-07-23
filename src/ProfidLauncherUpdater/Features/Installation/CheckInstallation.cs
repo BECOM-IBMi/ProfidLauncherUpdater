@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using FlintSoft.Result;
+using MediatR;
 using ProfidLauncherUpdater.Features.General;
 using ProfidLauncherUpdater.Shared;
 
@@ -18,7 +19,11 @@ public static class CheckInstallation
         {
             ////Uns intressieren nur die vx.y.z 
             var fResult = await _localVersionService.GetLocalVersions(cancellationToken);
-            if (!fResult.Value.Any())
+            if (fResult.IsFailure)
+            {
+                return fResult.Error!.ToError();
+            }
+            if (!fResult.Value!.Any())
             {
                 //Erstinstallation
                 return InstallationState.NEWINSTALLATION;
@@ -27,9 +32,9 @@ public static class CheckInstallation
             //Versionsordner vorhanden, prüfen
             //Aktuelle Version holen
             var vResult = await _remoteVersionService.GetCurrentVersionFromServer(cancellationToken);
-            if (vResult.IsFailure) return vResult.Error;
+            if (vResult.IsFailure) return vResult.Error!.ToError();
 
-            if (!fResult.Value.Any(x => x == vResult.Value))
+            if (!fResult.Value!.Any(x => x == vResult.Value))
             {
                 //Aktueller Ordner nicht vorhanden
                 return InstallationState.NEEDUPDATE;

@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using FlintSoft.Result;
+using Microsoft.Extensions.Logging;
 using ProfidLauncherUpdater.Shared;
-using System.IO.Compression;
 
 namespace ProfidLauncherUpdater.Features.General;
 
@@ -45,29 +45,32 @@ public class VersionDownloader
             if (string.IsNullOrEmpty(vToDownlaod))
             {
                 var res = await _remoteVersionService.GetCurrentVersionFromServer(canellationToken);
-                if (res.IsFailure) return res.Error;
+                if (res.IsFailure) return res.Error!.ToError();
 
-                vToDownlaod = res.Value;
+                vToDownlaod = res.Value!;
             }
             _serverVersionFile = $"v{vToDownlaod}.zip";
 
             var fileResult = await downloadFile(canellationToken);
-            if (fileResult.IsFailure) return fileResult.Error;
+            if (fileResult.IsFailure) return fileResult.Error!.ToError();
 
-            var writeResult = await writeFile(fileResult.Value, canellationToken);
-            if (writeResult.IsFailure) return writeResult.Error;
+            var writeResult = await writeFile(fileResult.Value!, canellationToken);
+            if (writeResult.IsFailure) return writeResult.Error!.ToError();
 
-            var zipResult = await unzip(vToDownlaod, canellationToken);
-            if (zipResult.IsFailure) return writeResult.Error;
+            //var zipResult = await unzip(vToDownlaod, canellationToken);
+            var target = Path.Combine(AppPath, $"v{version}");
+            _logger.LogInformation($"Unzipping file into folder {target}...");
+            var zipResult = await Tools.Unzipper(_downloadedFilePath, target, canellationToken);
+            if (zipResult.IsFailure) return writeResult.Error!.ToError();
 
             var rmResult = await removeZipFile(canellationToken);
-            if (rmResult.IsFailure) return writeResult.Error;
+            if (rmResult.IsFailure) return writeResult.Error!.ToError();
 
             var newInfo = await _localVersionService.WriteInfo(vToDownlaod, canellationToken);
-            if (newInfo.IsFailure) return newInfo.Error;
+            if (newInfo.IsFailure) return newInfo.Error!.ToError();
 
             var oldVersions = await _localVersionService.RemoveOldVersions(canellationToken);
-            if (oldVersions.IsFailure) return oldVersions.Error;
+            if (oldVersions.IsFailure) return oldVersions.Error!.ToError();
 
             _logger.LogInformation("File downloaded!");
             return 1;
@@ -122,22 +125,22 @@ public class VersionDownloader
         }
     }
 
-    private async Task<Result<bool>> unzip(string version, CancellationToken canellationToken)
-    {
-        try
-        {
-            var target = Path.Combine(AppPath, $"v{version}");
-            _logger.LogInformation($"Unzipping file into folder {target}...");
+    //private async Task<Result<bool>> unzip(string version, CancellationToken canellationToken)
+    //{
+    //    try
+    //    {
+    //        var target = Path.Combine(AppPath, $"v{version}");
+    //        _logger.LogInformation($"Unzipping file into folder {target}...");
 
-            await Task.Run(() => ZipFile.ExtractToDirectory(_downloadedFilePath, target), canellationToken);
+    //        await Task.Run(() => ZipFile.ExtractToDirectory(_downloadedFilePath, target), canellationToken);
 
-            return true;
-        }
-        catch (Exception ex)
-        {
-            return new Error(nameof(VersionDownloader) + "." + nameof(unzip) + ".Error", "Error unzipping version file: " + ex.Message);
-        }
-    }
+    //        return true;
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return new Error(nameof(VersionDownloader) + "." + nameof(unzip) + ".Error", "Error unzipping version file: " + ex.Message);
+    //    }
+    //}
 
     private async Task<Result<bool>> removeZipFile(CancellationToken canellationToken)
     {

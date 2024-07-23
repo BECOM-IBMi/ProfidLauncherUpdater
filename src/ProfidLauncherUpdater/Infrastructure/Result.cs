@@ -1,5 +1,6 @@
 ﻿namespace ProfidLauncherUpdater.Infrastructure;
 
+/*
 public class Result<T>
 {
     public bool IsSuccess { get; set; }
@@ -36,3 +37,4 @@ public class Result<T>
         Func<Error, R> failure) =>
            IsSuccess ? success(Value) : failure(Error);
 }
+*/

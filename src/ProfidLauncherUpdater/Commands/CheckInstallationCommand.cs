@@ -20,7 +20,7 @@ public class CheckInstallationCommand(IMediator mediator) : AsyncCommand<CheckIn
         var result = await _mediator.Send(new CheckInstallation.Command());
         if (result.IsFailure)
         {
-            AnsiConsole.Markup($"[red]{result.Error.Description}[/]");
+            AnsiConsole.Markup($"[red]{result.Error!.Description}[/]");
         }
 
         var msg = result.Value switch

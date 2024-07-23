@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using FlintSoft.Result;
+using Microsoft.Extensions.Logging;
 using ProfidLauncherUpdater.Shared;
 using System.Text.Json;
 
