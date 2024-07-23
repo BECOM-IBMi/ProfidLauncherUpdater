@@ -123,7 +123,7 @@ public class SelfUpdater
     {
         var proc = new Process();
         proc.StartInfo.FileName = "msiexec";
-        proc.StartInfo.Arguments = String.Format($"/i {msiFile} /quiet /qn");
+        proc.StartInfo.Arguments = String.Format($"/i {msiFile} /passive");
         proc.Start();
     }
 }
