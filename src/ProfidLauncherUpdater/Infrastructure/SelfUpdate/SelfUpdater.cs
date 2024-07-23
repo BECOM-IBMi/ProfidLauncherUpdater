@@ -122,6 +122,7 @@ public class SelfUpdater
     void runInstaller(string msiFile)
     {
         var proc = new Process();
+
         proc.StartInfo.FileName = "msiexec";
         proc.StartInfo.Arguments = String.Format($"/i \"{msiFile}\" /passive");
 
