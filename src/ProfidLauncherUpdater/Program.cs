@@ -1,8 +1,4 @@
-﻿//Config lesen
-
-//Gibt es bereits eine Installation (-> First Time)
-
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using ProfidLauncherUpdater.Commands;
 using ProfidLauncherUpdater.Features;
 using ProfidLauncherUpdater.Infrastructure.SelfUpdate;
@@ -11,7 +7,6 @@ using Spectre.Console;
 var host = Host.CreateApplicationBuilder();
 
 host.Services.AddFeatures(host.Configuration);
-//host.Services.AddScoped<IAnsiConsoleService, AnsiConsoleService>();
 
 var app = new CommandApp(new TypeRegistrar(host.Services));
 
