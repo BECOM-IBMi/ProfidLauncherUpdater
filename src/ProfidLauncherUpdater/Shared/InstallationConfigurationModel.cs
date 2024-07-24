@@ -28,11 +28,24 @@ public class RepositoryConfigurationModel
     [JsonPropertyName("downloadPath")]
     public string DownloadPath { get; set; } = "";
 
+    [JsonPropertyName("updater")]
+    public UpdaterInfo UpdaterInfo { get; set; } = new();
+
+    [JsonPropertyName("launcher")]
+    public LauncherInfo LauncherInfo { get; set; } = new();
+}
+
+public class UpdaterInfo
+{
     [JsonPropertyName("softwareId")]
     public string SoftwareId { get; set; } = "";
 
     [JsonPropertyName("localDirectory")]
     public string LocalDirectory { get; set; } = "";
+}
 
-    public string VersionFile { get; set; } = "";
+public class LauncherInfo
+{
+    [JsonPropertyName("softwareId")]
+    public string SoftwareId { get; set; } = "";
 }

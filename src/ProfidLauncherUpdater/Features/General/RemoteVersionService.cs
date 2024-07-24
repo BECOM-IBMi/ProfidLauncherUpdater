@@ -9,17 +9,17 @@ namespace ProfidLauncherUpdater.Features.General
     {
         private readonly InstallationConfigurationModel _config = config;
         private readonly HttpClient _client = httpClientFactory.CreateClient("repo");
-        private string? _currentVersion;
+        private RepositoryModel? _currentVersion;
         private readonly ILogger<RemoteVersionService> _logger = logger;
 
-        public async Task<Result<string>> GetCurrentVersionFromServer(CancellationToken cancellationToken)
+        public async Task<Result<RepositoryModel>> GetCurrentVersionFromServer(CancellationToken cancellationToken)
         {
             try
             {
                 if (_currentVersion is null)
                 {
                     _logger.LogInformation("Loading version from server...");
-                    var response = await _client.GetAsync(_config.Repository.VersionFile, cancellationToken);
+                    var response = await _client.GetAsync($"{_config.Repository.VersionPath}{_config.Repository.LauncherInfo.SoftwareId}", cancellationToken);
                     if (!response.IsSuccessStatusCode)
                     {
                         return new Error(nameof(GetCurrentVersionFromServer) + ".StatusCode", "Couldn't load version from repository: " + response.StatusCode);
@@ -33,8 +33,8 @@ namespace ProfidLauncherUpdater.Features.General
                         return new Error(nameof(GetCurrentVersionFromServer) + ".JSON", "Couldn't load json");
                     }
 
-                    _currentVersion = repo.Current;
-                    _logger.LogInformation($"Found version {_currentVersion} on the server!");
+                    _currentVersion = repo;
+                    _logger.LogInformation($"Found version {_currentVersion.LatestVersion} on the server!");
                 }
 
                 return _currentVersion;

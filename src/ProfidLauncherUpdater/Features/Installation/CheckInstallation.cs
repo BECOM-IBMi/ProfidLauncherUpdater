@@ -31,10 +31,10 @@ public static class CheckInstallation
 
             //Versionsordner vorhanden, prüfen
             //Aktuelle Version holen
-            var vResult = await _remoteVersionService.GetCurrentVersionFromServer(cancellationToken);
-            if (vResult.IsFailure) return vResult.Error!.ToError();
+            var currentServerVersionResult = await _remoteVersionService.GetCurrentVersionFromServer(cancellationToken);
+            if (currentServerVersionResult.IsFailure) return currentServerVersionResult.Error!.ToError();
 
-            if (!fResult.Value!.Any(x => x == vResult.Value))
+            if (!fResult.Value!.Any(x => x == currentServerVersionResult.Value!.LatestVersion))
             {
                 //Aktueller Ordner nicht vorhanden
                 return InstallationState.NEEDUPDATE;

@@ -58,22 +58,25 @@ if (sVersion.IsSuccess)
         AnsiConsole.MarkupLine($"[blue]Update of updator required![/]");
         AnsiConsole.WriteLine();
 
-        var updaterResult = await selfUpdater.UpdateSelf(sVersion.Value!);
-        updaterResult.Switch(
-            success: (v) => Environment.Exit(0),
-            failure: (err) =>
-            {
-                AnsiConsole.WriteLine();
-                AnsiConsole.MarkupLine($"[red]{err.Description}[/]");
-                AnsiConsole.WriteLine();
-            },
-            notFound: (err) =>
-            {
-                AnsiConsole.WriteLine();
-                AnsiConsole.MarkupLine($"[red]{err.Description}[/]");
-                AnsiConsole.WriteLine();
-            }
-            );
+        if (!args.Contains("check"))
+        {
+            var updaterResult = await selfUpdater.UpdateSelf(sVersion.Value!);
+            updaterResult.Switch(
+                success: (v) => Environment.Exit(0),
+                failure: (err) =>
+                {
+                    AnsiConsole.WriteLine();
+                    AnsiConsole.MarkupLine($"[red]{err.Description}[/]");
+                    AnsiConsole.WriteLine();
+                },
+                notFound: (err) =>
+                {
+                    AnsiConsole.WriteLine();
+                    AnsiConsole.MarkupLine($"[red]{err.Description}[/]");
+                    AnsiConsole.WriteLine();
+                }
+                );
+        }
     }
 }
 

@@ -8,18 +8,28 @@ namespace ProfidLauncherUpdater.Infrastructure.SelfUpdate;
 
 public class SelfUpdater
 {
-    private readonly RepositoryConfigurationModel _config;
+    private readonly InstallationConfigurationModel _config;
     private readonly HttpClient _client;
 
     public SelfUpdater(IConfiguration config)
     {
-        var cfg = new RepositoryConfigurationModel();
-        config.GetSection("installation:repository").Bind(cfg);
+        var cfg = new InstallationConfigurationModel();
+        config.GetSection("installation").Bind(cfg);
         _config = cfg;
+
+        var updater = new UpdaterInfo();
+        config.GetSection("installation:repository:updater").Bind(updater);
+
+        var launcher = new LauncherInfo();
+        config.GetSection("installation:repository:launcher").Bind(launcher);
+
+        cfg.Repository.UpdaterInfo = updater;
+        cfg.Repository.LauncherInfo = launcher;
+
 
         _client = new HttpClient
         {
-            BaseAddress = new Uri(_config.BasePath)
+            BaseAddress = new Uri(_config.Repository.BasePath)
         };
     }
 
@@ -27,7 +37,7 @@ public class SelfUpdater
     {
         try
         {
-            var serverVersion = await _client.GetFromJsonAsync<ServerVersionModel>($"{_config.VersionPath}{_config.SoftwareId}");
+            var serverVersion = await _client.GetFromJsonAsync<ServerVersionModel>($"{_config.Repository.VersionPath}{_config.Repository.UpdaterInfo.SoftwareId}");
             if (serverVersion is null)
             {
                 return new Error("SERVER_VERSION", "The version on the server is null");
@@ -44,7 +54,7 @@ public class SelfUpdater
     {
         try
         {
-            var di = new DirectoryInfo($@".\{_config.LocalDirectory}");
+            var di = new DirectoryInfo($@".\{_config.Repository.UpdaterInfo.LocalDirectory}");
             ensureDirectoryExists(di);
 
             var downloadResult = await downloadUpdate(serverVersion);
@@ -82,18 +92,18 @@ public class SelfUpdater
     {
         try
         {
-            var resp = await _client.GetAsync($"{_config.DownloadPath}{serverVersion.VersionId}");
+            var resp = await _client.GetAsync($"{_config.Repository.DownloadPath}{serverVersion.VersionId}");
             if (resp.IsSuccessStatusCode)
             {
                 using (Stream streamToReadFrom = await resp.Content.ReadAsStreamAsync())
                 {
-                    using (FileStream fileStream = new FileStream($@".\{_config.LocalDirectory}\{serverVersion.FileName}", FileMode.Create, FileAccess.Write))
+                    using (FileStream fileStream = new FileStream($@".\{_config.Repository.UpdaterInfo.LocalDirectory}\{serverVersion.FileName}", FileMode.Create, FileAccess.Write))
                     {
                         await streamToReadFrom.CopyToAsync(fileStream);
                     }
                 }
 
-                var fi = new FileInfo($@".\{_config.LocalDirectory}\{serverVersion.FileName}");
+                var fi = new FileInfo($@".\{_config.Repository.UpdaterInfo.LocalDirectory}\{serverVersion.FileName}");
                 if (fi.Exists)
                 {
                     return fi.FullName;

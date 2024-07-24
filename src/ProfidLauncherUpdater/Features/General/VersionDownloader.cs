@@ -11,7 +11,7 @@ public class VersionDownloader
     private readonly RemoteVersionService _remoteVersionService;
     private readonly LocalVersionService _localVersionService;
     private readonly ILogger<VersionDownloader> _logger;
-    private string _serverVersionFile = "";
+    //private string _serverVersionFile = "";
     private string _downloadedFilePath = "";
 
     public string AppPath { get; set; }
@@ -35,30 +35,28 @@ public class VersionDownloader
         }
     }
 
-    public async Task<Result<int>> DonwloadVersionFromServer(CancellationToken canellationToken, string version = "")
+    public async Task<Result<int>> DonwloadVersionFromServer(CancellationToken canellationToken, RepositoryModel? repo = null)
     {
         try
         {
-            _logger.LogInformation($"Downloading version {version} from server...");
+            _logger.LogInformation($"Downloading version {repo?.LatestVersion ?? "N/A"} from server...");
 
-            var vToDownlaod = version;
-            if (string.IsNullOrEmpty(vToDownlaod))
+            var vToDownload = repo;
+            if (vToDownload is null)
             {
                 var res = await _remoteVersionService.GetCurrentVersionFromServer(canellationToken);
                 if (res.IsFailure) return res.Error!.ToError();
 
-                vToDownlaod = res.Value!;
+                vToDownload = res.Value!;
             }
-            _serverVersionFile = $"v{vToDownlaod}.zip";
 
-            var fileResult = await downloadFile(canellationToken);
+            var fileResult = await downloadFile(vToDownload!, canellationToken);
             if (fileResult.IsFailure) return fileResult.Error!.ToError();
 
-            var writeResult = await writeFile(fileResult.Value!, canellationToken);
+            var writeResult = await writeFile(fileResult.Value!, vToDownload!, canellationToken);
             if (writeResult.IsFailure) return writeResult.Error!.ToError();
 
-            //var zipResult = await unzip(vToDownlaod, canellationToken);
-            var target = Path.Combine(AppPath, $"v{version}");
+            var target = Path.Combine(AppPath, $"v{vToDownload.LatestVersion}");
             _logger.LogInformation($"Unzipping file into folder {target}...");
             var zipResult = await Tools.Unzipper(_downloadedFilePath, target, canellationToken);
             if (zipResult.IsFailure) return writeResult.Error!.ToError();
@@ -66,7 +64,7 @@ public class VersionDownloader
             var rmResult = await removeZipFile(canellationToken);
             if (rmResult.IsFailure) return writeResult.Error!.ToError();
 
-            var newInfo = await _localVersionService.WriteInfo(vToDownlaod, canellationToken);
+            var newInfo = await _localVersionService.WriteInfo(vToDownload!.LatestVersion!, canellationToken);
             if (newInfo.IsFailure) return newInfo.Error!.ToError();
 
             var oldVersions = await _localVersionService.RemoveOldVersions(canellationToken);
@@ -81,11 +79,14 @@ public class VersionDownloader
         }
     }
 
-    private async Task<Result<Stream>> downloadFile(CancellationToken canellationToken)
+    private async Task<Result<Stream>> downloadFile(RepositoryModel serverVersion, CancellationToken canellationToken)
     {
         try
         {
-            var stream = await _client.GetStreamAsync(_serverVersionFile, canellationToken);
+            var resp = await _client.GetAsync($"{_config.Repository.DownloadPath}{serverVersion.VersionId}");
+
+
+            var stream = await _client.GetStreamAsync(serverVersion.Filename, canellationToken);
             if (stream is null)
             {
                 return new Error(nameof(downloadFile) + ".NotFound", "Current version package couldn't be found!");
@@ -99,12 +100,12 @@ public class VersionDownloader
         }
     }
 
-    private async Task<Result<bool>> writeFile(Stream fileStream, CancellationToken canellationToken)
+    private async Task<Result<bool>> writeFile(Stream fileStream, RepositoryModel serverVersion, CancellationToken canellationToken)
     {
         try
         {
             var downloadFolder = Path.Combine(AppPath, "tmp");
-            _logger.LogInformation($"Writing downloaded file info folder {downloadFile}...");
+            _logger.LogInformation($"Writing downloaded file info folder {downloadFolder}...");
 
             if (!Directory.Exists(downloadFolder))
             {
@@ -112,7 +113,7 @@ public class VersionDownloader
                 Directory.CreateDirectory(downloadFolder);
             }
 
-            _downloadedFilePath = Path.Combine(downloadFolder, _serverVersionFile);
+            _downloadedFilePath = Path.Combine(downloadFolder, serverVersion.Filename);
             _logger.LogInformation($"Writing downloaded file into file {_downloadedFilePath}...");
             using FileStream outputFileStream = new(_downloadedFilePath, FileMode.CreateNew);
             await fileStream.CopyToAsync(outputFileStream, canellationToken);
@@ -124,23 +125,6 @@ public class VersionDownloader
             return new Error(nameof(VersionDownloader) + "." + nameof(writeFile) + ".Error", "Couldn't write current version: " + ex.Message);
         }
     }
-
-    //private async Task<Result<bool>> unzip(string version, CancellationToken canellationToken)
-    //{
-    //    try
-    //    {
-    //        var target = Path.Combine(AppPath, $"v{version}");
-    //        _logger.LogInformation($"Unzipping file into folder {target}...");
-
-    //        await Task.Run(() => ZipFile.ExtractToDirectory(_downloadedFilePath, target), canellationToken);
-
-    //        return true;
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        return new Error(nameof(VersionDownloader) + "." + nameof(unzip) + ".Error", "Error unzipping version file: " + ex.Message);
-    //    }
-    //}
 
     private async Task<Result<bool>> removeZipFile(CancellationToken canellationToken)
     {

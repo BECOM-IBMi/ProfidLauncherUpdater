@@ -26,8 +26,8 @@ public static class Update
                 if (lversion.IsFailure) return lversion.Error!.ToError();
 
                 //Read latest from server
-                var vResult = await _remoteVersionService.GetCurrentVersionFromServer(cancellationToken);
-                if (vResult.IsFailure) return vResult.Error!.ToError();
+                var currentServerVersionResult = await _remoteVersionService.GetCurrentVersionFromServer(cancellationToken);
+                if (currentServerVersionResult.IsFailure) return currentServerVersionResult.Error!.ToError();
 
                 //Check current version
                 var lvResult = await _localVersionService.GetLocalVersions(cancellationToken);
@@ -38,16 +38,15 @@ public static class Update
                     //firsttime -> download latest
                     await _versionDownloader.DonwloadVersionFromServer(cancellationToken);
 
-                    return (InstallationState.NEWINSTALLATION, "", vResult.Value!);
+                    return (InstallationState.NEWINSTALLATION, "", currentServerVersionResult.Value!.LatestVersion);
                 }
 
-                var cVersion = vResult.Value!;
-                if (lvResult.Value.Any(x => x == cVersion))
+                if (lvResult.Value.Any(x => x == currentServerVersionResult.Value!.LatestVersion))
                 {
                     if (lversion.Value == "")
                     {
                         //Aus irgendeinemgrund wurde keine version ins info file geschrieben
-                        var info = await _localVersionService.WriteInfo(cVersion, cancellationToken);
+                        var info = await _localVersionService.WriteInfo(currentServerVersionResult.Value!.LatestVersion, cancellationToken);
                         if (info.IsFailure) return info.Error!.ToError();
                     }
 
@@ -58,7 +57,7 @@ public static class Update
                 //if newer -> download latest
                 await _versionDownloader.DonwloadVersionFromServer(cancellationToken);
 
-                return (InstallationState.UPDATED, lversion.Value!, vResult.Value!);
+                return (InstallationState.UPDATED, lversion.Value!, currentServerVersionResult.Value!.LatestVersion);
             }
             catch (Exception ex)
             {
