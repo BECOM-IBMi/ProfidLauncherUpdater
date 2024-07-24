@@ -97,21 +97,22 @@ public class LocalVersionService
         {
             return await Task.Run<Result<List<DirectoryInfo>>>(() =>
             {
-                if (_dirsInApp is null)
+                //if (_dirsInApp is null)
+                //{
+                DirectoryInfo info = new(AppPath);
+                if (!info.Exists)
                 {
-                    DirectoryInfo info = new(AppPath);
-                    if (!info.Exists)
-                    {
-                        //Fehler
-                        return new Error(nameof(GetFoldersInBaseDirectory) + ".ReadFolders", "No base folder");
-                    }
-
-                    var directories = info.GetDirectories().ToList();
-
-                    _dirsInApp = directories;
+                    //Fehler
+                    return new Error(nameof(GetFoldersInBaseDirectory) + ".ReadFolders", "No base folder");
                 }
 
-                return _dirsInApp;
+                var directories = info.GetDirectories().ToList();
+
+                return directories;
+                //_dirsInApp = directories;
+                //}
+
+                //return _dirsInApp;
             }, cancellationToken);
         }
         catch (Exception ex)
@@ -164,7 +165,7 @@ public class LocalVersionService
             var info = await LoadInfo(cancellationToken);
             if (info.IsFailure) return new Error(dirs.Error!.Code, dirs.Error.Description);
 
-            foreach (var dir in dirs.Value!)
+            foreach (var dir in dirs.Value!.Where(x => x.Name.StartsWith("v")))
             {
                 //Prüfen ob es e nicht die aktuelle oder die vorherige Version ist
                 if (dir.Name == $"v{info.Value!.Active}" || dir.Name == $"v{info.Value.Previous}")

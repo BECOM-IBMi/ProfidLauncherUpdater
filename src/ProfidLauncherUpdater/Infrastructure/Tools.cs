@@ -9,7 +9,7 @@ public class Tools
 {
     public static string GetCurrentVersion()
     {
-        var version = "1.0.0+LOCALBUILD";
+        var version = "2.0.27+LOCALBUILD";
         var appAssembly = typeof(Program).Assembly;
         if (appAssembly != null)
         {
@@ -19,7 +19,11 @@ public class Tools
                 var infoVerAttr = (AssemblyInformationalVersionAttribute)attrs;
                 if (infoVerAttr != null && infoVerAttr.InformationalVersion.Length > 6)
                 {
+#if DEBUG
+                    version = "2.0.27";
+#else
                     version = infoVerAttr.InformationalVersion;
+#endif
                 }
             }
         }

@@ -84,15 +84,41 @@ public class VersionDownloader
         try
         {
             var resp = await _client.GetAsync($"{_config.Repository.DownloadPath}{serverVersion.VersionId}");
-
-
-            var stream = await _client.GetStreamAsync(serverVersion.Filename, canellationToken);
-            if (stream is null)
+            if (resp.IsSuccessStatusCode)
             {
-                return new Error(nameof(downloadFile) + ".NotFound", "Current version package couldn't be found!");
-            }
+                Stream streamToReadFrom = await resp.Content.ReadAsStreamAsync();
+                if (streamToReadFrom is null)
+                {
+                    return new Error(nameof(downloadFile) + ".NotFound", "Current version package couldn't be found!");
+                }
 
-            return stream;
+                //using (Stream streamToReadFrom = await resp.Content.ReadAsStreamAsync())
+                //{
+                //    FileStream fileStream = new FileStream($@".\{_config.Repository.UpdaterInfo.LocalDirectory}\{serverVersion.FileName}", FileMode.Create, FileAccess.Write)
+
+                //    await streamToReadFrom.CopyToAsync(fileStream);
+
+                //    if (fileStream is null)
+                //    {
+                //        return new Error(nameof(downloadFile) + ".NotFound", "Current version package couldn't be found!");
+                //    }
+
+                //    return fileStream;
+
+                //}
+
+                //var stream = await _client.GetStreamAsync(serverVersion.Filename, canellationToken);
+                return streamToReadFrom;
+            }
+            else
+            {
+                if (resp.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return new NotFound(nameof(downloadFile) + ".downloadUpdate", "Couldn't find the version on the server");
+                }
+
+                return new Error(nameof(downloadFile) + ".downloadUpdate", $"When downloading the latest version the server responded with {resp.StatusCode}");
+            }
         }
         catch (Exception ex)
         {
@@ -115,8 +141,16 @@ public class VersionDownloader
 
             _downloadedFilePath = Path.Combine(downloadFolder, serverVersion.Filename);
             _logger.LogInformation($"Writing downloaded file into file {_downloadedFilePath}...");
-            using FileStream outputFileStream = new(_downloadedFilePath, FileMode.CreateNew);
+            using FileStream outputFileStream = new(_downloadedFilePath, FileMode.CreateNew, FileAccess.Write);
             await fileStream.CopyToAsync(outputFileStream, canellationToken);
+
+            await outputFileStream.FlushAsync();
+            await outputFileStream.DisposeAsync();
+            outputFileStream.Close();
+
+            await fileStream.FlushAsync();
+            await fileStream.DisposeAsync();
+            fileStream.Close();
 
             return true;
         }

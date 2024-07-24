@@ -1,10 +1,21 @@
 ﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using ProfidLauncherUpdater.Commands;
 using ProfidLauncherUpdater.Features;
 using ProfidLauncherUpdater.Infrastructure.SelfUpdate;
+using Serilog;
 using Spectre.Console;
 
 var host = Host.CreateApplicationBuilder();
+
+host.Logging.ClearProviders();
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(host.Configuration)
+    .CreateLogger();
+
+host.Logging.AddSerilog();
 
 host.Services.AddFeatures(host.Configuration);
 
