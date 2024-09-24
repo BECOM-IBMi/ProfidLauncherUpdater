@@ -60,10 +60,10 @@ if (sVersion.IsFailure)
 if (sVersion.IsSuccess)
 {
     AnsiConsole.WriteLine();
-    AnsiConsole.WriteLine($"Server Version: {sVersion.Value!.Version}");
+    AnsiConsole.WriteLine($"Server Version: {sVersion.Value!.version}");
     AnsiConsole.WriteLine();
 
-    if (sVersion.Value!.Version != version)
+    if (sVersion.Value!.version != version)
     {
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine($"[blue]Update of updator required![/]");
@@ -71,7 +71,7 @@ if (sVersion.IsSuccess)
 
         if (!args.Contains("check"))
         {
-            var updaterResult = await selfUpdater.UpdateSelf(sVersion.Value!);
+            var updaterResult = await selfUpdater.UpdateSelf(sVersion.Value!.serverVersion);
             updaterResult.Switch(
                 success: (v) => Environment.Exit(0),
                 failure: (err) =>
@@ -91,4 +91,4 @@ if (sVersion.IsSuccess)
     }
 }
 
-return app.Run(args);
+//return app.Run(args);
