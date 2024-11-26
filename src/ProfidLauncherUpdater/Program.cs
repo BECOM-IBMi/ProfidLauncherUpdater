@@ -36,10 +36,7 @@ app.Configure(c =>
     .WithDescription("Checks for a new update and updates the app if there is a newer one. It also does a first time installation!");
 });
 
-//if (args.Length == 0)
-//{
 AnsiConsole.Write(new FigletText("ProfidLauncher Updater").Centered().Color(Color.Blue));
-//}
 
 var version = Tools.GetCurrentVersion();
 
@@ -62,6 +59,10 @@ if (sVersion.IsSuccess)
     AnsiConsole.WriteLine();
     AnsiConsole.WriteLine($"Server Version: {sVersion.Value!.version}");
     AnsiConsole.WriteLine();
+
+#if DEBUG
+    //version = sVersion.Value!.version;
+#endif
 
     if (sVersion.Value!.version != version)
     {
@@ -91,4 +92,4 @@ if (sVersion.IsSuccess)
     }
 }
 
-//return app.Run(args);
+return app.Run(args);

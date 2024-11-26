@@ -1,20 +1,27 @@
 ﻿using FlintSoft.Result;
 using FlintSoft.Result.Types;
 using Microsoft.Extensions.Configuration;
+using ProfidLauncherUpdater.Shared;
 using System.Diagnostics;
-using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace ProfidLauncherUpdater.Infrastructure.SelfUpdate;
 
 public class SelfUpdater
 {
     private readonly IConfiguration _config;
+    private readonly HttpClient _client;
 
     public SelfUpdater(IConfiguration config)
     {
         _config = config;
 
-
+        var repoBase = config.GetValue<string>("installation:repository:repoBase") ?? "";
+        _client = new HttpClient
+        {
+            BaseAddress = new Uri(repoBase)
+        };
+        _client.DefaultRequestHeaders.UserAgent.ParseAdd("ProfidLauncherUpdater");
     }
 
     public async Task<Result<(string version, ServerVersionModel serverVersion)>> GetServerVersion()
@@ -27,12 +34,15 @@ public class SelfUpdater
                 return new Error("SERVER_VERSION_RELURL", "The release url is empty");
             }
 
-            var client = new HttpClient
+            var request = new HttpRequestMessage(HttpMethod.Get, updaterReleaseUrl);
+            var resp = await _client.SendAsync(request);
+            if (!resp.IsSuccessStatusCode)
             {
-                BaseAddress = new Uri(updaterReleaseUrl)
-            };
+                return new Error("SERVER_VERSION_RESPONSE_NOK", $"The server responded with status {resp.StatusCode}");
+            }
 
-            var serverRelease = await client.GetFromJsonAsync<ServerVersionModel>("");
+            var respStream = await resp.Content.ReadAsStreamAsync();
+            var serverRelease = await JsonSerializer.DeserializeAsync<ServerVersionModel>(respStream);
             if (serverRelease is null)
             {
                 return new Error("SERVER_VERSION_RESPONSE", "The version on the server is null");
@@ -72,7 +82,9 @@ public class SelfUpdater
             if (downloadResult.IsFailure) return downloadResult.Error!.ToError();
             if (downloadResult.IsNotFound) return downloadResult.Error!.ToNotFound();
 
+#if !DEBUG
             runInstaller(downloadResult.Value!);
+#endif
             return new Sucess();
         }
         catch (Exception ex)

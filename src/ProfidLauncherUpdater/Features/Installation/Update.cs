@@ -38,15 +38,15 @@ public static class Update
                     //firsttime -> download latest
                     await _versionDownloader.DonwloadVersionFromServer(cancellationToken);
 
-                    return (InstallationState.NEWINSTALLATION, "", currentServerVersionResult.Value!.LatestVersion);
+                    return (InstallationState.NEWINSTALLATION, "", currentServerVersionResult.Value!.VersionOnServer ?? "N/A");
                 }
 
-                if (lvResult.Value.Any(x => x == currentServerVersionResult.Value!.LatestVersion))
+                if (lvResult.Value.Any(x => x == currentServerVersionResult.Value!.VersionOnServer))
                 {
                     if (lversion.Value == "")
                     {
                         //Aus irgendeinemgrund wurde keine version ins info file geschrieben
-                        var info = await _localVersionService.WriteInfo(currentServerVersionResult.Value!.LatestVersion, cancellationToken);
+                        var info = await _localVersionService.WriteInfo(currentServerVersionResult.Value!.VersionOnServer ?? "N/A", cancellationToken);
                         if (info.IsFailure) return info.Error!.ToError();
                     }
 
@@ -57,7 +57,7 @@ public static class Update
                 //if newer -> download latest
                 await _versionDownloader.DonwloadVersionFromServer(cancellationToken);
 
-                return (InstallationState.UPDATED, lversion.Value!, currentServerVersionResult.Value!.LatestVersion);
+                return (InstallationState.UPDATED, lversion.Value!, currentServerVersionResult.Value!.VersionOnServer!);
             }
             catch (Exception ex)
             {

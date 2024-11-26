@@ -1,15 +1,8 @@
-﻿using System.Text.Json.Serialization;
-
-namespace ProfidLauncherUpdater.Shared;
+﻿namespace ProfidLauncherUpdater.Shared;
 
 public class RepositoryModel
 {
-    [JsonPropertyName("id")]
-    public string VersionId { get; set; } = "";
+    public string? VersionOnServer { get; set; }
 
-    [JsonPropertyName("version")]
-    public string LatestVersion { get; set; } = "";
-
-    [JsonPropertyName("filename")]
-    public string Filename { get; set; } = "";
+    public ServerVersionModel? ServerVersion { get; set; }
 }
