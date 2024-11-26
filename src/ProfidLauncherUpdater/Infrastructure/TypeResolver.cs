@@ -22,7 +22,7 @@ public sealed class TypeResolver : ITypeResolver, IDisposable
     }
 
 #pragma warning disable CS8767 // Nullability of reference types in type of parameter doesn't match implicitly implemented member (possibly because of nullability attributes).
-    public object Resolve(Type type)
+    public object? Resolve(Type type)
 
     {
         if (type == null)

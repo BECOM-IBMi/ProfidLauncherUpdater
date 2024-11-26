@@ -39,7 +39,7 @@ public class VersionDownloader
     {
         try
         {
-            _logger.LogInformation($"Downloading version {repo?.LatestVersion ?? "N/A"} from server...");
+            _logger.LogInformation($"Downloading version {repo?.VersionOnServer ?? "N/A"} from server...");
 
             var vToDownload = repo;
             if (vToDownload is null)
@@ -53,10 +53,10 @@ public class VersionDownloader
             var fileResult = await downloadFile(vToDownload!, canellationToken);
             if (fileResult.IsFailure) return fileResult.Error!.ToError();
 
-            var writeResult = await writeFile(fileResult.Value!, vToDownload!, canellationToken);
+            var writeResult = await writeFile(fileResult.Value!, canellationToken);
             if (writeResult.IsFailure) return writeResult.Error!.ToError();
 
-            var target = Path.Combine(AppPath, $"v{vToDownload.LatestVersion}");
+            var target = Path.Combine(AppPath, $"v{vToDownload.VersionOnServer}");
             _logger.LogInformation($"Unzipping file into folder {target}...");
             var zipResult = await Tools.Unzipper(_downloadedFilePath, target, canellationToken);
             if (zipResult.IsFailure) return writeResult.Error!.ToError();
@@ -64,7 +64,7 @@ public class VersionDownloader
             var rmResult = await removeZipFile(canellationToken);
             if (rmResult.IsFailure) return writeResult.Error!.ToError();
 
-            var newInfo = await _localVersionService.WriteInfo(vToDownload!.LatestVersion!, canellationToken);
+            var newInfo = await _localVersionService.WriteInfo(vToDownload!.VersionOnServer!, canellationToken);
             if (newInfo.IsFailure) return newInfo.Error!.ToError();
 
             var oldVersions = await _localVersionService.RemoveOldVersions(canellationToken);
@@ -79,11 +79,22 @@ public class VersionDownloader
         }
     }
 
-    private async Task<Result<Stream>> downloadFile(RepositoryModel serverVersion, CancellationToken canellationToken)
+    private async Task<Result<(Stream serverFileStream, Asset? asset)>> downloadFile(RepositoryModel serverVersion, CancellationToken canellationToken)
     {
         try
         {
-            var resp = await _client.GetAsync($"{_config.Repository.DownloadPath}{serverVersion.VersionId}");
+            var asset = serverVersion.ServerVersion?.assets.FirstOrDefault();
+            if (asset is null)
+            {
+                return new Error(nameof(downloadFile) + "_NO_ASSETS", "Couldn't find any release assets");
+            }
+
+            var client = new HttpClient()
+            {
+                BaseAddress = new Uri(asset.browser_download_url)
+            };
+
+            var resp = await client.GetAsync("");
             if (resp.IsSuccessStatusCode)
             {
                 Stream streamToReadFrom = await resp.Content.ReadAsStreamAsync();
@@ -92,23 +103,7 @@ public class VersionDownloader
                     return new Error(nameof(downloadFile) + ".NotFound", "Current version package couldn't be found!");
                 }
 
-                //using (Stream streamToReadFrom = await resp.Content.ReadAsStreamAsync())
-                //{
-                //    FileStream fileStream = new FileStream($@".\{_config.Repository.UpdaterInfo.LocalDirectory}\{serverVersion.FileName}", FileMode.Create, FileAccess.Write)
-
-                //    await streamToReadFrom.CopyToAsync(fileStream);
-
-                //    if (fileStream is null)
-                //    {
-                //        return new Error(nameof(downloadFile) + ".NotFound", "Current version package couldn't be found!");
-                //    }
-
-                //    return fileStream;
-
-                //}
-
-                //var stream = await _client.GetStreamAsync(serverVersion.Filename, canellationToken);
-                return streamToReadFrom;
+                return (streamToReadFrom, asset);
             }
             else
             {
@@ -126,7 +121,7 @@ public class VersionDownloader
         }
     }
 
-    private async Task<Result<bool>> writeFile(Stream fileStream, RepositoryModel serverVersion, CancellationToken canellationToken)
+    private async Task<Result<bool>> writeFile((Stream fileStream, Asset? asset) serverAsset, CancellationToken canellationToken)
     {
         try
         {
@@ -139,18 +134,23 @@ public class VersionDownloader
                 Directory.CreateDirectory(downloadFolder);
             }
 
-            _downloadedFilePath = Path.Combine(downloadFolder, serverVersion.Filename);
+            if (string.IsNullOrEmpty(serverAsset.asset?.name))
+            {
+                return new Error(nameof(writeFile) + ".WRITE_FILE.NO_ASSET", "Asset file name from server is not availiable");
+            }
+
+            _downloadedFilePath = Path.Combine(downloadFolder, serverAsset.asset?.name ?? "");
             _logger.LogInformation($"Writing downloaded file into file {_downloadedFilePath}...");
             using FileStream outputFileStream = new(_downloadedFilePath, FileMode.CreateNew, FileAccess.Write);
-            await fileStream.CopyToAsync(outputFileStream, canellationToken);
+            await serverAsset.fileStream.CopyToAsync(outputFileStream, canellationToken);
 
             await outputFileStream.FlushAsync();
             await outputFileStream.DisposeAsync();
             outputFileStream.Close();
 
-            await fileStream.FlushAsync();
-            await fileStream.DisposeAsync();
-            fileStream.Close();
+            await serverAsset.fileStream.FlushAsync();
+            await serverAsset.fileStream.DisposeAsync();
+            serverAsset.fileStream.Close();
 
             return true;
         }

@@ -34,7 +34,7 @@ public static class CheckInstallation
             var currentServerVersionResult = await _remoteVersionService.GetCurrentVersionFromServer(cancellationToken);
             if (currentServerVersionResult.IsFailure) return currentServerVersionResult.Error!.ToError();
 
-            if (!fResult.Value!.Any(x => x == currentServerVersionResult.Value!.LatestVersion))
+            if (!fResult.Value!.Any(x => x == currentServerVersionResult.Value!.VersionOnServer))
             {
                 //Aktueller Ordner nicht vorhanden
                 return InstallationState.NEEDUPDATE;

@@ -10,7 +10,7 @@ public class LocalVersionService
     private readonly InstallationConfigurationModel _config;
     private readonly ILogger<LocalVersionService> _logger;
     private InfoModel? _info;
-    private List<DirectoryInfo>? _dirsInApp;
+    //private List<DirectoryInfo>? _dirsInApp;
 
     public string AppPath { get; set; }
     public string InfoFilePath { get; set; }
