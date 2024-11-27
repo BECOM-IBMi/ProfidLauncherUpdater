@@ -63,6 +63,11 @@ jobs:
         ref: ${{ github.head_ref }}
         fetch-depth: 0
     
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.x
+
     - name: GitVersion Setup
       uses: gittools/actions/gitversion/setup@v1.1.1
       with:
