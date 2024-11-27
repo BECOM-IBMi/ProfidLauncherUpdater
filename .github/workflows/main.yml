@@ -142,7 +142,7 @@ jobs:
       uses: caphyon/advinst-github-action@main
       with:
         aip-path: './assets/ProfidLauncherBase.aip'
-        aip-build-name: 'Default'
+        aip-build-name: 'DefaultBuild'
         aip-output-dir: ${{ env.InstallerDirectory }}
         aip-package-name: ProfidLauncherSetup.msi
         aip-commands: |
