@@ -147,8 +147,8 @@ jobs:
         aip-package-name: ProfidLauncherSetup.msi
         aip-commands: |
           SetVersion ${{ env.semVer }}
-          NewShortcut -name "Profid Launcher" -dir DesktopFolder -target APPDIR\ProfidLauncherUpdater.exe -arg "run ATRIUMP" -icon '${{ env.ArtifactsDirectory }}\Assets\favicon.ico'
-          NewShortcut -name "Profid Launcher" -dir ShortcutFolder -target APPDIR\ProfidLauncherUpdater.exe -arg "run ATRIUMP" -icon '${{ env.ArtifactsDirectory }}\Assets\favicon.ico'
+          NewShortcut -name "Profid Launcher" -dir DesktopFolder -target APPDIR\ProfidLauncherUpdater.exe -arg "run ATRIUMP" -icon '.\artifacts\Assets\favicon.ico'
+          NewShortcut -name "Profid Launcher" -dir ShortcutFolder -target APPDIR\ProfidLauncherUpdater.exe -arg "run ATRIUMP" -icon '.\artifacts\Assets\favicon.ico'
 
     - name: Release
       uses: softprops/action-gh-release@v2
