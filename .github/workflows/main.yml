@@ -1,0 +1,154 @@
+name: publish
+on: 
+  workflow_dispatch:
+  push:
+    branches:
+    - 'main'
+  pull_request:
+    branches:
+    - '*'
+  release:
+    types:
+    - published
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+  ArtifactsDirectory: ${{github.workspace}}/artifacts
+  InstallerDirectory: ${{github.workspace}}/installer
+
+jobs:
+  tests:
+    runs-on: windows-latest
+
+    steps:
+        - uses: actions/checkout@v4
+
+        - name: Setup .NET
+          uses: actions/setup-dotnet@v4
+          with:
+            dotnet-version: 8.x
+        
+        - name: Show ref
+          run: echo ${{ github.ref }}
+          
+        - name: Restore
+          run: dotnet restore
+        
+        - name: Build
+          run: dotnet build --configuration Release --no-restore
+        
+        - name: Test
+          run: dotnet test --configuration Release --no-restore
+
+  build:
+    runs-on: windows-latest
+  
+    needs: tests
+  
+    defaults:
+      run:
+        shell: pwsh
+  
+    if: |
+      github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.head_ref }}
+        fetch-depth: 0
+    
+    - name: GitVersion Setup
+      uses: gittools/actions/gitversion/setup@v1.1.1
+      with:
+        versionSpec: '5.x'
+      
+    - name: Determine Version
+      uses: gittools/actions/gitversion/execute@v1.1.1
+      id: version
+      with:
+        useConfigFile: true
+        configFilePath: GitVersion.yml
+    
+    - name: Use the version
+      run: |
+        echo ${{ env.semVer }}
+
+    - name: Restore
+      run: dotnet restore ./src/ProfidLauncherUpdater/ProfidLauncherUpdater.csproj
+        
+    - name: Build
+      run: dotnet build ./src/ProfidLauncherUpdater/ProfidLauncherUpdater.csproj -c Release --no-restore
+
+    - name: Publish
+      run: dotnet publish ./src/ProfidLauncherUpdater/ProfidLauncherUpdater.csproj -c Release --no-restore -r win-x64 --self-contained -o ${{ env.ArtifactsDirectory }} -p:PublishSingleFile=true -p:Version=${{ env.semVer }}
+
+    - name: Delete Development json
+      run: rm ${{ env.ArtifactsDirectory }}/appsettings.Development.json
+    
+    - uses: actions/upload-artifact@v4
+      with:
+          name: updater
+          if-no-files-found: error
+          retention-days: 2
+          path: ${{ env.ArtifactsDirectory }}
+  
+  create_installer:
+    runs-on: windows-latest
+  
+    needs: build
+  
+    defaults:
+      run:
+        shell: pwsh
+  
+    if: |
+      github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - uses: actions/download-artifact@v4
+      name: Download
+      with:
+        name: Zipped
+        path: ${{ env.ArtifactsDirectory }}
+    
+    - name: GitVersion Setup
+      uses: gittools/actions/gitversion/setup@v1.1.1
+      with:
+        versionSpec: '5.x'
+        
+    - name: Determine Version
+      uses: gittools/actions/gitversion/execute@v1.1.1
+      id: version
+      with:
+        useConfigFile: true
+        configFilePath: GitVersion.yml
+    
+    - name: Build Installer
+      uses: caphyon/advinst-github-action@main
+      with:
+        aip-path: './assets/ProfidLauncherBase.aip'
+        aip-build-name: 'Default'
+        aip-output-dir: ${{ env.InstallerDirectory }}
+        aip-package-name: ProfidLauncherSetup.msi
+        aip-commands: |
+          SetVersion ${{ env.semVer }}
+          NewShortcut -name "Profid Launcher" -dir DesktopFolder -target APPDIR\ProfidLauncherUpdater.exe -arg "run ATRIUMP" -icon './assets/favicon.ico'
+          NewShortcut -name "Profid Launcher" -dir ShortcutFolder -target APPDIR\ProfidLauncherUpdater.exe -arg "run ATRIUMP" -icon './assets/favicon.ico'
+
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ env.semVer }}
+        name: ProfidLauncherUpdater v${{ env.semVer }}
+        files: ${{ env.semVer }}.zip
+        token: ${{ secrets.RELEASE_KEY }}
