@@ -15,7 +15,7 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
   DOTNET_NOLOGO: true
   ArtifactsDirectory: ${{github.workspace}}/artifacts
-  InstallerDirectory: ${{github.workspace}}/installer
+  InstallerDirectory: ${{github.workspace}}\installer
 
 jobs:
   tests:
@@ -147,8 +147,8 @@ jobs:
         aip-package-name: ProfidLauncherSetup.msi
         aip-commands: |
           SetVersion ${{ env.semVer }}
-          NewShortcut -name "Profid Launcher" -dir DesktopFolder -target APPDIR\ProfidLauncherUpdater.exe -arg "run ATRIUMP" -icon './assets/favicon.ico'
-          NewShortcut -name "Profid Launcher" -dir ShortcutFolder -target APPDIR\ProfidLauncherUpdater.exe -arg "run ATRIUMP" -icon './assets/favicon.ico'
+          NewShortcut -name "Profid Launcher" -dir DesktopFolder -target APPDIR\ProfidLauncherUpdater.exe -arg "run ATRIUMP" -icon '.\assets\favicon.ico'
+          NewShortcut -name "Profid Launcher" -dir ShortcutFolder -target APPDIR\ProfidLauncherUpdater.exe -arg "run ATRIUMP" -icon '.\assets\favicon.ico'
 
     - name: Release
       uses: softprops/action-gh-release@v2
