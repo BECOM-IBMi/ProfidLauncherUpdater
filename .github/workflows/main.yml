@@ -138,15 +138,14 @@ jobs:
         useConfigFile: true
         configFilePath: GitVersion.yml
     
-    - name: Build Installer
+    - name: Install Advanced Installer
       uses: caphyon/advinst-github-action@main
       with:
-        aip-path: './assets/ProfidLauncherBase.aip'
-        aip-build-name: 'DefaultBuild'
-        aip-output-dir: ${{ env.InstallerDirectory }}
-        aip-package-name: ProfidLauncherSetup.msi
-        aip-commands: |
-          SetVersion ${{ env.semVer }}
+        advinst-enable-automation: 'true'
+
+    - name: Build MSI
+      run: |
+       .\update_aip.gha.ps1 ${{ env.semVer }} 
 
     - name: Release
       uses: softprops/action-gh-release@v2
