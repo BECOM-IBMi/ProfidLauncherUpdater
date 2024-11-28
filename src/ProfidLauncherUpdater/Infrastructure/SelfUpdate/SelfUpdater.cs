@@ -64,7 +64,11 @@ public class SelfUpdater
                 return new Error("SERVER_VERSION_TAG", "The version tag from the server is empty");
             }
 
-            var version = tag.Substring(1, tag.Length - 1);
+            var version = tag;
+            if (version.Contains("v"))
+            {
+                version = version.Substring(1, version.Length - 1);
+            }
             _logger.Information($"Server version is {version}");
             return (version, serverRelease);
         }
