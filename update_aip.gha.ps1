@@ -12,10 +12,6 @@ $advinst = New-Object -ComObject AdvancedInstaller
 
 $project = $advinst.LoadProject($aip)
 
-$tag = git describe --abbrev=0
-$tag = $tag.Replace('v', '')
-$tag = $tag.Substring(0, $tag.LastIndexOf('.') + 1)
-
 $ver = $args[0]
 echo $ver
 
