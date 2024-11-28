@@ -83,7 +83,7 @@ public class VersionDownloader
     {
         try
         {
-            var asset = serverVersion.ServerVersion?.assets.FirstOrDefault();
+            var asset = serverVersion.ServerVersion?.assets?.FirstOrDefault();
             if (asset is null)
             {
                 return new Error(nameof(downloadFile) + "_NO_ASSETS", "Couldn't find any release assets");
