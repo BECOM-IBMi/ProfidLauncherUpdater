@@ -2,6 +2,7 @@
 using FlintSoft.Result.Types;
 using Microsoft.Extensions.Configuration;
 using ProfidLauncherUpdater.Shared;
+using Serilog;
 using System.Diagnostics;
 using System.Text.Json;
 
@@ -10,11 +11,13 @@ namespace ProfidLauncherUpdater.Infrastructure.SelfUpdate;
 public class SelfUpdater
 {
     private readonly IConfiguration _config;
+    private readonly ILogger _logger;
     private readonly HttpClient _client;
 
-    public SelfUpdater(IConfiguration config)
+    public SelfUpdater(IConfiguration config, ILogger logger)
     {
         _config = config;
+        _logger = logger;
 
         var repoBase = config.GetValue<string>("installation:repository:repoBase") ?? "";
         _client = new HttpClient
@@ -28,9 +31,11 @@ public class SelfUpdater
     {
         try
         {
+            _logger.Information("Retrieving server version for updater...");
             var updaterReleaseUrl = _config.GetValue<string>("installation:repository:updater") ?? "";
             if (string.IsNullOrEmpty(updaterReleaseUrl))
             {
+                _logger.Error("\"SERVER_VERSION_RELURL: The release url is empty");
                 return new Error("SERVER_VERSION_RELURL", "The release url is empty");
             }
 
@@ -38,6 +43,7 @@ public class SelfUpdater
             var resp = await _client.SendAsync(request);
             if (!resp.IsSuccessStatusCode)
             {
+                _logger.Error($"SERVER_VERSION_RESPONSE_NOK: The server responded with status {resp.StatusCode}");
                 return new Error("SERVER_VERSION_RESPONSE_NOK", $"The server responded with status {resp.StatusCode}");
             }
 
@@ -45,6 +51,7 @@ public class SelfUpdater
             var serverRelease = await JsonSerializer.DeserializeAsync<ServerVersionModel>(respStream);
             if (serverRelease is null)
             {
+                _logger.Error($"SERVER_VERSION_RESPONSE: The version on the server is null");
                 return new Error("SERVER_VERSION_RESPONSE", "The version on the server is null");
             }
 
@@ -53,14 +60,17 @@ public class SelfUpdater
             var tag = serverRelease.tag_name;
             if (string.IsNullOrEmpty(tag))
             {
+                _logger.Error($"SERVER_VERSION_TAG: The version tag from the server is empty");
                 return new Error("SERVER_VERSION_TAG", "The version tag from the server is empty");
             }
 
             var version = tag.Substring(1, tag.Length - 1);
+            _logger.Information($"Server version is {version}");
             return (version, serverRelease);
         }
         catch (Exception ex)
         {
+            _logger.Error($"SERVER_VERSION_ERROR: When retrieving the server version the following error occured: {ex.Message}");
             return new Error("SERVER_VERSION_ERROR", $"When retrieving the server version the following error occured: {ex.Message}");
         }
     }
@@ -69,26 +79,31 @@ public class SelfUpdater
     {
         try
         {
+            _logger.Information("Needs self update, preparing...");
             var updaterDownloadDirectory = _config.GetValue<string>("installation:repository:updaterDownloadDirectory") ?? "";
             if (string.IsNullOrEmpty(updaterDownloadDirectory))
             {
+                _logger.Error($"SELF_UPDATE_TARGET_DIR: \"The download dir is empty");
                 return new Error("SELF_UPDATE_TARGET_DIR", "The download dir is empty");
             }
 
             var di = new DirectoryInfo(updaterDownloadDirectory);
             ensureDirectoryExists(di);
 
+            _logger.Information("Downloading server version...");
             var downloadResult = await downloadUpdate(serverVersion, updaterDownloadDirectory);
             if (downloadResult.IsFailure) return downloadResult.Error!.ToError();
             if (downloadResult.IsNotFound) return downloadResult.Error!.ToNotFound();
 
 #if !DEBUG
+            _logger.Information("Sucess! Running installer...");
             runInstaller(downloadResult.Value!);
 #endif
             return new Sucess();
         }
         catch (Exception ex)
         {
+            _logger.Error($"SELF_UPDATE_ERROR: When updating the updater, the following error occured: {ex.Message}");
             return new Error("SELF_UPDATE_ERROR", $"When updating the updater, the following error occured: {ex.Message}");
         }
     }
@@ -106,9 +121,10 @@ public class SelfUpdater
     {
         try
         {
-            var asset = serverVersion.assets.FirstOrDefault();
+            var asset = serverVersion.assets!.FirstOrDefault();
             if (asset is null)
             {
+                _logger.Error($"SELF_UPDATE_UPDATER_NO_ASSETS: Couldn't find any release assets");
                 return new Error("SELF_UPDATE_UPDATER_NO_ASSETS", "Couldn't find any release assets");
             }
 
@@ -138,6 +154,7 @@ public class SelfUpdater
                 }
                 else
                 {
+                    _logger.Error($"SELF_UPDATE_UPDATER_NO_DOWNLOAD: After downloading the file {asset.name} is not persistet");
                     return new Error("SELF_UPDATE_UPDATER_NO_DOWNLOAD", $"After downloading the file {asset.name} is not persistet");
                 }
             }
@@ -145,14 +162,17 @@ public class SelfUpdater
             {
                 if (resp.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
+                    _logger.Error($"SELF_UPDATE_UPDATER_NOT_FOUND: Couldn't find the version on the server");
                     return new NotFound("SELF_UPDATE_UPDATER_NOT_FOUND", "Couldn't find the version on the server");
                 }
 
+                _logger.Error($"SELF_UPDATE_UPDATER_DNL_ERRPR: When downloading the latest version the server responded with {resp.StatusCode}");
                 return new Error("SELF_UPDATE_UPDATER_DNL_ERRPR", $"When downloading the latest version the server responded with {resp.StatusCode}");
             }
         }
         catch (Exception ex)
         {
+            _logger.Error($"SELF_UPDATE_UPDATER_ERRPR");
             return new Error(ex, "SELF_UPDATE_UPDATER_ERRPR");
         }
     }

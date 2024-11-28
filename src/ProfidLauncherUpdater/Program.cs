@@ -40,13 +40,17 @@ AnsiConsole.Write(new FigletText("ProfidLauncher Updater").Centered().Color(Colo
 
 var version = Tools.GetCurrentVersion();
 
+Log.Logger.Information($"ProfidLauncher Updater v{version}");
+
 AnsiConsole.WriteLine();
 AnsiConsole.WriteLine($"Version: {version}");
 AnsiConsole.WriteLine();
 
-var selfUpdater = new SelfUpdater(host.Configuration);
+var selfUpdater = new SelfUpdater(host.Configuration, Log.Logger);
 
 var sVersion = await selfUpdater.GetServerVersion();
+Log.Logger.Information($"Server version v{sVersion.Value!.version}");
+
 if (sVersion.IsFailure)
 {
     AnsiConsole.WriteLine();
@@ -72,9 +76,14 @@ if (sVersion.IsSuccess)
 
         if (!args.Contains("check"))
         {
+            Log.Logger.Information($"Requires self update...");
             var updaterResult = await selfUpdater.UpdateSelf(sVersion.Value!.serverVersion);
             updaterResult.Switch(
-                success: (v) => Environment.Exit(0),
+                success: (v) =>
+                {
+                    Log.Logger.Information($"Update run, need to close application");
+                    Environment.Exit(0);
+                },
                 failure: (err) =>
                 {
                     AnsiConsole.WriteLine();
