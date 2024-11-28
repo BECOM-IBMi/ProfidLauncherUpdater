@@ -15,7 +15,7 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
   DOTNET_NOLOGO: true
   ArtifactsDirectory: ${{github.workspace}}/artifacts
-  InstallerDirectory: ${{github.workspace}}\installer
+  InstallerDirectory: ${{github.workspace}}\installer\ProfidLauncherSetup.msi
 
 jobs:
   tests:
@@ -152,5 +152,5 @@ jobs:
       with:
         tag_name: ${{ env.semVer }}
         name: ProfidLauncherUpdater v${{ env.semVer }}
-        files: ${{ env.semVer }}.zip
+        files: ${{ env.InstallerDirectory }}
         token: ${{ secrets.RELEASE_KEY }}
