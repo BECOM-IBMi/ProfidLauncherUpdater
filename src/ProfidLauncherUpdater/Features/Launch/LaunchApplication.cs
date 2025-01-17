@@ -39,7 +39,7 @@ namespace ProfidLauncherUpdater.Features.Launch
                     startInfo.UseShellExecute = false;
                     startInfo.WorkingDirectory = appBasePath;
                     startInfo.FileName = path;
-                    startInfo.Arguments = $"-m {request.mode}";
+                    startInfo.Arguments = $"-m {request.mode} -u";
                     Process.Start(startInfo);
 
 
